@@ -1,0 +1,21 @@
+spring:
+  config:
+    activate.on-profile: mumbaitest 
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: ${driver_class_name:oracle.jdbc.OracleDriver}
+    url: ${database_url:jdbc:oracle:thin:@devsrv:1521:mumbaidb}
+    username: ${database_username:fa}
+    password: ${database_password:mumbaidb}
+    name: ${database_name:mumbaidb}
+    hikari:
+     connection-test-query: SELECT 1 FROM DUAL
+     connectionInitSql: ALTER SESSION SET NLS_DATE_FORMAT='DD-MM-RR'    
+---
+server:
+  port: ${port:8080}
+  servlet.session.cookie.name: JSESSIONID_MUMBAI
+  
+
+report-jobs-path: ${REPORT_JOBS_PATH:////DEVSRV//temp-report//}
+  

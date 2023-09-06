@@ -1,0 +1,25 @@
+spring:
+  config:
+    activate.on-profile: mumbaiprod
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: ${driver_class_name:oracle.jdbc.OracleDriver}
+    url: ${database_url:jdbc:oracle:thin:@prodsrv:1521:fadevdb}
+    username: ${database_username:fa}
+    password: ${database_password:mikecalvin}   
+    name: ${database_name:fadevdb}
+    hikari:
+     connection-test-query: SELECT 1 FROM DUAL
+     connectionInitSql: ALTER SESSION SET NLS_DATE_FORMAT='DD-MM-RR'
+---
+server:
+  port: ${port:8080}
+  servlet.session.cookie.name: JSESSIONID_MUMBAI
+  
+---
+feign.client:
+  crystal-report-service-name: crystal-report-service
+  url: ${feign-url:http://localhost:8081}
+
+---
+report-jobs-path: ${REPORT_JOBS_PATH:////ADSRV//temp-report//}  
