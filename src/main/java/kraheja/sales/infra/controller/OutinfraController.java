@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import kraheja.sales.bean.request.OutinfraRequestBean;
 import kraheja.sales.infra.service.OutinfraService;
-
+ 
 @RestController
 @RequestMapping("/outinfra")
 public class OutinfraController {
@@ -37,24 +37,24 @@ public class OutinfraController {
 	//following function will fetch the maintainance rate
 	//-----Start--NS-14-08-2023---------
 	@GetMapping("/fetch-maintainance-rate-for-auxi")
-	public ResponseEntity<?> fetchMaintainanceRate(@RequestParam(value="bldgcode") String bldgcode, @RequestParam(value="wing") String wing, @RequestParam(value="flatno") String flatno, @RequestParam(value="month") String month, @RequestParam(value="billType") String billType){
-		return this.outinfraService.fetchMaintainanceRate(bldgcode, wing, flatno, month, billType);
+	public ResponseEntity<?> fetchMaintainanceRate(@RequestParam(value="bldgcode") String bldgcode, @RequestParam(value="wing") String wing, @RequestParam(value="flatno") String flatno, @RequestParam(value="billType") String billType){
+		return this.outinfraService.fetchMaintainanceRate(bldgcode, wing, flatno, billType);
 	}		
 	//-----End--NS--14-08-2023---------
 			
 	//following function will fetch the admin rate
 	//-----Start--NS-17-08-2023---------
 	@GetMapping("/fetch-admin-rate-for-auxi")
-	public ResponseEntity<?> fetchAdminRate(@RequestParam(value="bldgcode") String bldgcode, @RequestParam(value="wing") String wing, @RequestParam(value="flatno") String flatno, @RequestParam(value="month") String month, @RequestParam(value="billType") String billType){
-		return this.outinfraService.fetchAdminRate(bldgcode, wing, flatno, month, billType);
+	public ResponseEntity<?> fetchAdminRate(@RequestParam(value="bldgcode") String bldgcode, @RequestParam(value="wing") String wing, @RequestParam(value="flatno") String flatno, @RequestParam(value="billType") String billType){
+		return this.outinfraService.fetchAdminRate(bldgcode, wing, flatno, billType);
 	}		
 	//-----End--NS--17-08-2023---------
 					
 	//following function will fetch the TDS rate
 	//-----Start--NS-17-08-2023---------
 	@GetMapping("/fetch-TDS-rate-for-auxi")
-	public ResponseEntity<?> fetchTDSRate(@RequestParam(value="bldgcode") String bldgcode, @RequestParam(value="wing") String wing, @RequestParam(value="flatno") String flatno, @RequestParam(value="month") String month, @RequestParam(value="billType") String billType){
-		return this.outinfraService.fetchTDSRate(bldgcode, wing, flatno, month, billType);
+	public ResponseEntity<?> fetchTDSRate(@RequestParam(value="bldgcode") String bldgcode, @RequestParam(value="wing") String wing, @RequestParam(value="flatno") String flatno, @RequestParam(value="billType") String billType){
+		return this.outinfraService.fetchTDSRate(bldgcode, wing, flatno, billType);
 	}		
 	//-----End--NS--17-08-2023---------
 						
@@ -93,6 +93,11 @@ public class OutinfraController {
 	@PutMapping("/update-outinfra")
 	public ResponseEntity<?> updateOutinfra(@Valid @RequestBody OutinfraRequestBean outinfraRequestBean) throws ParseException {
 		return this.outinfraService.updateOutinfra(outinfraRequestBean);
+	}
+	
+	@GetMapping("/fetch-startdate-and-enddate-by-Bldgcode-and-wing-and-flatnum-and-bill-type") //NS 04.09.2023
+	public ResponseEntity<?> fetchStartdateAndEnddateByBldgcodeAndWingAndFlatnumAndbilltype(@RequestParam(value = "bldgcode") String  bldgcode, @RequestParam(value = "wing") String  wing, @RequestParam(value = "flatno") String  flatnum, @RequestParam(value = "billType") String  billtype) throws ParseException {
+		return this.outinfraService.fetchStartdateAndEnddateByBldgcodeAndWingAndFlatnumAndbilltype(bldgcode, wing, flatnum, billtype) ; 
 	}
 
 //	@GetMapping("/check-Bldgcode-and-Ownerid-and-Recnum-and-Month-and-Narrcode-exists")

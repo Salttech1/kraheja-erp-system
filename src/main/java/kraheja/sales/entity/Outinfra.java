@@ -108,9 +108,6 @@ public class Outinfra implements Serializable {
 	@Column(name="INF_SERVTAX")
 	private Double infServtax ;
 
-	@Column(name="INF_SGST")
-	private Double infSgst ;
-
 	@Column(name="INF_SGSTPERC")
 	private Double infSgstperc ;
 
@@ -131,5 +128,8 @@ public class Outinfra implements Serializable {
 
 	@Column(name="INF_WING")
 	private String infWing ;
+
+	@Column(name="INF_SGST")
+	private Double infSgst ;
 
 }

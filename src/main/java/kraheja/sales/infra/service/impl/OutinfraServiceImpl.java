@@ -40,7 +40,7 @@ import kraheja.sales.infra.service.OutinfraService;
 import kraheja.sales.repository.FlatownerRepository;
 import kraheja.sales.repository.OutinfraRepository;
 import kraheja.sales.repository.OutrateRepository;
-
+ 
 @Service
 @Transactional
 public class OutinfraServiceImpl implements OutinfraService {
@@ -78,20 +78,63 @@ public class OutinfraServiceImpl implements OutinfraService {
 	}
 	
 	@Override
-	public ResponseEntity<?> fetchMaintainanceRate(String  bldgcode, String  wing, String  flatnum, String  month, String billtype) { //NS 14.08.2023
-		String maintainanceRate = this.outrateRepository.fetchMaintainanceRateForAuxilliary(bldgcode, wing, flatnum, month, billtype);	
+	public ResponseEntity<?> fetchStartdateAndEnddateByBldgcodeAndWingAndFlatnumAndbilltype(String bldgcode, String wing, String flatnum, String billtype) { //NS 04.09.2023
+		String startDate = this.outrateRepository.fetchStartdateForAuxiGSTFirst(bldgcode, wing, flatnum, billtype);
+		String data = "";
+		if(startDate != "")
+		{
+			if(startDate != null) //NS 05.09.2023
+			{
+				String endDate = this.outrateRepository.fetchEndDeteForAuxiGSTFirst(bldgcode, wing, flatnum, billtype);
+				if(endDate != "")
+				{
+					if(endDate != null) //NS 05.09.2023
+					{
+					data = startDate + "/" + endDate;
+					return ResponseEntity.ok(ServiceResponseBean.builder()
+							.status(Boolean.TRUE).data(data).build());
+					}
+					else
+					{
+						return ResponseEntity.ok(ServiceResponseBean.builder()
+								.status(Boolean.FALSE).message("END DATE NOT EXIST.").build());//NS 05.09.2023
+					}
+				}	
+				else
+				{
+					return ResponseEntity.ok(ServiceResponseBean.builder()
+							.status(Boolean.FALSE).message("END DATE NOT EXIST.").build());
+				}
+			}
+			else
+			{
+				return ResponseEntity.ok(ServiceResponseBean.builder()
+						.status(Boolean.FALSE).message("START DATE NOT EXIST.").build());//NS 05.09.2023
+			}
+		}
+		else
+		{
+			return ResponseEntity.ok(ServiceResponseBean.builder()
+					.status(Boolean.FALSE).message("START DATE NOT EXIST.").build());
+		}
+	}
+
+	
+	@Override
+	public ResponseEntity<?> fetchMaintainanceRate(String  bldgcode, String  wing, String  flatnum, String billtype) { //NS 14.08.2023
+		String maintainanceRate = this.outrateRepository.fetchMaintainanceRateForAuxilliary(bldgcode, wing, flatnum, billtype);	
 		return ResponseEntity.ok(ServiceResponseBean.builder().status(Boolean.TRUE).data(maintainanceRate).build());
 	}
 	
 	@Override
-	public ResponseEntity<?> fetchAdminRate(String  bldgcode, String  wing, String  flatnum, String  month, String billtype) { //NS 17.08.2023
-		String adminRate = this.outrateRepository.fetchAdminRateForAuxilliary(bldgcode, wing, flatnum, month, billtype);	
+	public ResponseEntity<?> fetchAdminRate(String  bldgcode, String  wing, String  flatnum, String billtype) { //NS 17.08.2023
+		String adminRate = this.outrateRepository.fetchAdminRateForAuxilliary(bldgcode, wing, flatnum, billtype);	
 		return ResponseEntity.ok(ServiceResponseBean.builder().status(Boolean.TRUE).data(adminRate).build());
 	}
 	
 	@Override
-	public ResponseEntity<?> fetchTDSRate(String  bldgcode, String  wing, String  flatnum, String  month, String billtype) { //NS 17.08.2023
-		String adminRate = this.outrateRepository.fetchTDSRateForAuxilliary(bldgcode, wing, flatnum, month, billtype);	
+	public ResponseEntity<?> fetchTDSRate(String  bldgcode, String  wing, String  flatnum, String billtype) { //NS 17.08.2023
+		String adminRate = this.outrateRepository.fetchTDSRateForAuxilliary(bldgcode, wing, flatnum, billtype);	
 		return ResponseEntity.ok(ServiceResponseBean.builder().status(Boolean.TRUE).data(adminRate).build());
 	}
 	
@@ -140,6 +183,7 @@ public class OutinfraServiceImpl implements OutinfraService {
 		String gsttype = "";
 		String strlochsmscode = "995419"; // this code will fetch the related code from the database 
 		String StrLocTranDate = LocalDate.now().format(CommonConstraints.INSTANCE.DDMMYYYY_FORMATTER);
+		
 		Query query = this.entityManager.createNativeQuery("SELECT FUNC_GetGSTPerc('" + strlochsmscode + "','','" + StrLocTranDate + "','DESC') AS HSMS_DESC , " + "FUNC_GetGSTPerc('" + strlochsmscode + "','CGST','" + StrLocTranDate + "','PERC') AS HSMS_CGSTPERC , FUNC_GetGSTPerc('" + strlochsmscode + "','SGST','" + StrLocTranDate + "','PERC') AS HSMS_SGSTPERC , FUNC_GetGSTPerc('" + strlochsmscode + "','IGST','" + StrLocTranDate + "','PERC') AS HSMS_IGSTPERC , FUNC_GetGSTPerc('" + strlochsmscode + "','UGST','" + StrLocTranDate + "','PERC') AS HSMS_UGSTPERC FROM dual", Tuple.class);
 		List<Tuple> tuplesList = query.getResultList();
 //		Object data = tuplesList.get(0);

@@ -35,13 +35,5 @@ public interface EmployeeDetailsEntryEditRepository extends JpaRepository<Empjob
 			+ "       AND trim(efor_jobtype) = :empJobtype\r\n"
 			+ "       AND trim(efor_earndedcode) = :earndedcode",nativeQuery = true)
 	String GetFormula(String empCoy,char empType,char empJobtype,String earndedcode);
-	
-	@Query(value="SELECT :formula as amt\r\n"
-			+ "FROM   v_empsalarypackage\r\n"
-			+ "WHERE  trim(vspk_empcode) = :empcode \r\n"
-			+ "       AND vspk_todate = (SELECT MAX(vspk_todate)\r\n"
-			+ "                               FROM   v_empsalarypackage\r\n"
-			+ "                               WHERE  trim(vspk_empcode) = :empcode)",nativeQuery = true)
-	Double GetOutputValue(String formula,String empcode);
 
 }

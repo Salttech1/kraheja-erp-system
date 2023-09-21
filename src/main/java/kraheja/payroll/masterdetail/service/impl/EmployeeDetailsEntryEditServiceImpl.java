@@ -242,7 +242,7 @@ public class EmployeeDetailsEntryEditServiceImpl implements EmployeeDetailsEntry
 			   empphotopath = CommonConstraints.INSTANCE.EMPPHOTOPATH + empcode.trim() + ".jpg";
 		    } else {
 		    	empphotopath = CommonConstraints.INSTANCE.EMPPHOTOPATH + "employee.jpg";
-		    } // Error message.
+		    } 
 
 		empPhoto = ImageToByteArray.imagetoblob(empphotopath);
 		employeeDetailsResponseBean.setEmpPhoto(empPhoto);
@@ -263,45 +263,41 @@ public class EmployeeDetailsEntryEditServiceImpl implements EmployeeDetailsEntry
 //		List<Object[]> newresultSet = newq.getResultList();
 //		logger.info("MonthGrossAmount :: {}", newresultSet);
 		
-		logger.info("Coy :: {}", empjobinfolist.get(0).getEjinCompany());
-		logger.info("Emptype :: {}",empjobinfolist.get(0).getEjinEmptype());
-		logger.info("Jobtype :: {}",empjobinfolist.get(0).getEjinJobtype());
-		
-		String MonthlyGrossQuery = employeeDetailsEntryEditRepository.GetMonthGrossQuery(empcode,empjobinfolist.get(0).getEjinCompany(),empjobinfolist.get(0).getEjinEmptype(),empjobinfolist.get(0).getEjinJobtype());
-		logger.info("MonthGrossQuery :: {}", MonthlyGrossQuery);
-		
-		Query newq = entityManager.createNativeQuery(MonthlyGrossQuery);
-		List<Object[]> newresultSet = newq.getResultList();
-		logger.info("MonthGrossAmount :: {}", newresultSet);
+//		logger.info("Coy :: {}", empjobinfolist.get(0).getEjinCompany());
+//		logger.info("Emptype :: {}",empjobinfolist.get(0).getEjinEmptype());
+//		logger.info("Jobtype :: {}",empjobinfolist.get(0).getEjinJobtype());
+//		
+//		String MonthlyGrossQuery = employeeDetailsEntryEditRepository.GetMonthGrossQuery(empcode,empjobinfolist.get(0).getEjinCompany(),empjobinfolist.get(0).getEjinEmptype(),empjobinfolist.get(0).getEjinJobtype());
+//		logger.info("MonthGrossQuery :: {}", MonthlyGrossQuery);
+//		
+//		Query newq = entityManager.createNativeQuery(MonthlyGrossQuery);
+//		List<Object[]> newresultSet = newq.getResultList();
+//		logger.info("MonthGrossAmount :: {}", newresultSet);
 		
 //		Double MonthlyGross = employeeDetailsEntryEditRepository.GetMonthGross(MonthlyGrossQuery);
 //		logger.info("MonthGrossAmount :: {}", MonthlyGross);
 		
+		if(CollectionUtils.isNotEmpty(emppersonallist)) {
 		Tuple empjobinfodetforpayformula = employeeDetailsEntryEditRepository.GetEmployeeJobinfoForFormula(empcode);
 		if(Objects.nonNull(empjobinfodetforpayformula)) {
 			String coy = empjobinfodetforpayformula.get(0, String.class).trim();
 			char emptype = empjobinfodetforpayformula.get(1, Character.class);
 			char jobtype = empjobinfodetforpayformula.get(2, Character.class);
-			logger.info("jobtype :: {}", jobtype);
-			logger.info("emptype :: {}", emptype);
-			logger.info("coy :: {}", coy);
-			String formula = employeeDetailsEntryEditRepository.GetFormula(coy, emptype, jobtype, "MTHLYGROSS");
+			String formulaMthlyGross = employeeDetailsEntryEditRepository.GetFormula(coy, emptype, jobtype, "MTHLYGROSS");
 			
-			Query q = entityManager.createNativeQuery(formula);
-			q.setParameter("empcode", empcode.trim());
-			List newresultSet1 = q.getResultList();
-			logger.info("MonthGrossAmount :: {}", newresultSet1);
-			employeeDetailsResponseBean.setMTHLYGROSS(newresultSet1);
+			Query queryMthlyGross = entityManager.createNativeQuery(formulaMthlyGross);
+			queryMthlyGross.setParameter("empcode", empcode.trim());
+			List mthlyGrossresultSet = queryMthlyGross.getResultList();
+			employeeDetailsResponseBean.setMTHLYGROSS(mthlyGrossresultSet);
 			
 			
 			String formulaCTC = employeeDetailsEntryEditRepository.GetFormula(coy, emptype, jobtype, "CTC");
-			Query q1 = entityManager.createNativeQuery(formulaCTC);
-			q1.setParameter("empcode", empcode.trim());
-			List newresultSet2 = q1.getResultList();
-			logger.info("CTC :: {}", newresultSet2);
-			employeeDetailsResponseBean.setCTC(newresultSet2);
+			Query queryCTC = entityManager.createNativeQuery(formulaCTC);
+			queryCTC.setParameter("empcode", empcode.trim());
+			List CTCresultSet = queryCTC.getResultList();
+			employeeDetailsResponseBean.setCTC(CTCresultSet);
 		}
-		
+		}
 		
 		if(Objects.nonNull(employeeDetailsResponseBean)) {
 			return ResponseEntity.ok(ServiceResponseBean.builder().status(Boolean.TRUE).data(employeeDetailsResponseBean).build());	

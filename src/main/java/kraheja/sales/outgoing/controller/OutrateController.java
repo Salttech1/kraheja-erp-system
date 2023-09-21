@@ -55,4 +55,6 @@ public class OutrateController {
 	public ResponseEntity<?> deleteOutrate(@RequestParam(value = "bldgcode") String  bldgcode, @RequestParam(value = "flatnum") String  flatnum, @RequestParam(value = "wing") String  wing, @RequestParam(value = "startdate") String  startdate) throws ParseException {
 		return this.outrateService.deleteOutrate(bldgcode, flatnum, wing, startdate) ; 
 	}
+	
+	
 }

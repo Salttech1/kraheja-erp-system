@@ -1,7 +1,7 @@
 spring:
   application:
     name: ${SPRING_APPLICATION_NAME:kraheja-service}
-  #profiles.active: dev
+  profiles.active: mumbaitest
   mvc:
     pathmatch:
         matching-strategy: ant_path_matcher
@@ -24,6 +24,7 @@ spring:
     properties:
       hibernate:
         show_sql: true
+        sql: DEBUG
         proc:
           param_null_passing: true
           spring:
@@ -48,8 +49,9 @@ password:
   expiry: 10
   
 permitted:
-  filters: /register,/h2-console/**,/report/**,/swagger-ui/**,/passwd/**,/certificate/**,/payroll/**,/test/**
-  resources: /images/**,/js/**,/webjars/**,/index,html,/report/**,/v2/api-docs,/configuration/ui,/swagger-resources/**,/configuration/security,/swagger-ui.html,/building/**, /project/**,/purchase-bills/**,inspolendorsement/**,/admexph/**,/party/**,/inspolicy/**,/payroll/**,/test/**,/payrollreports/**
+#  filters: /register,/h2-console/**,/report/**,/swagger-ui/**,/passwd/**,/certificate/**,/payroll/**,/test/**,/infra/**,/outinfra/**,/outgoing/**,/outrate/**
+  filters: "/**"
+  resources: /images/**,/js/**,/webjars/**,/index,html,/report/**,/v2/api-docs,/configuration/ui,/swagger-resources/**,/configuration/security,/swagger-ui.html,/building/**, /project/**,/purchase-bills/**,inspolendorsement/**,/admexph/**,/party/**,/inspolicy/**,/payroll/**,/test/**,/payrollreports/**,/infra/**,/outinfra/**,/outgoing/**,/outrate/**
   
 cors:
   allowed:

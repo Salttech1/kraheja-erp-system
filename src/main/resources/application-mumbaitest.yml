@@ -16,6 +16,11 @@ server:
   port: ${port:8080}
   servlet.session.cookie.name: JSESSIONID_MUMBAI
   
-
+---
+feign.client:
+  crystal-report-service-name: crystal-report-service
+  url: ${feign-url:http://localhost:8081}
+ 
+---
 report-jobs-path: ${REPORT_JOBS_PATH:////DEVSRV//temp-report//}
   

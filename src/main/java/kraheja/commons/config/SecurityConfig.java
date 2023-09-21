@@ -16,10 +16,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTDocument1;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,7 +51,6 @@ import kraheja.commons.entity.Passwd;
 import kraheja.commons.repository.LogDotnetLoginRepository;
 import kraheja.commons.repository.PasswdRepository;
 import kraheja.commons.service.impl.AuthenticationService;
-import kraheja.commons.utils.CommonConstraints;
 
 @Configuration
 @EnableWebSecurity(debug = false)
