@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import kraheja.sales.bean.entitiesresponse.Balance;
 import kraheja.sales.entity.Outinfra;
 import kraheja.sales.entity.OutinfraCK;
 
@@ -24,4 +25,6 @@ public interface OutinfraRepository extends JpaRepository<Outinfra, OutinfraCK> 
 	@Query("select Max(o.outinfraCK.infMonth) from Outinfra o where o.outinfraCK.infBldgcode= :bldgCode and o.infWing= :wing and o.infFlatnum= :flatnum and o.outinfraCK.infMonth= :month and o.infChargecode= :chargeCode and o.infRectype= :rectype  and o.infCancelledyn= 'N'")
 	String findMaxInfMonthByCriteria(@Param("bldgCode") String bldgCode, @Param("wing")String wing, @Param("flatnum")String flatnum, @Param("month")String month, @Param("chargeCode")String chargeCode, @Param("rectype") String rectype);
 	
+	@Query("select new kraheja.sales.bean.entitiesresponse.Balance(sum(nvl(o.infAmtpaid,0)) as amtPaid,  sum(nvl(o.infAmtint,0)) as amtint,  sum(nvl(o.infCgst,0)) as cgst, sum(nvl(o.infAdmincharges, 0)) as adminharges,  (o.outinfraCK.infMonth) as month , (o.outinfraCK.infOwnerid) as ownerid,  sum(nvl(o.infSgst,0)) as sgst,  sum(nvl(o.infIgst,0)) as igst,  sum(nvl(o.infTds,0)) as tds) from Outinfra o where o.outinfraCK.infOwnerid=:ownerid  and o.outinfraCK.infMonth>=:month and o.infChargecode=:chargeCode and o.infRectype =:recType and o.infGstyn= 'Y' and o.infCancelledyn='N' group by o.outinfraCK.infOwnerid, o.outinfraCK.infBldgcode, o.infWing, o.infFlatnum, o.outinfraCK.infMonth  order by o.outinfraCK.infOwnerid, o.outinfraCK.infBldgcode, o.infWing, o.infFlatnum, o.outinfraCK.infMonth ")
+	List<Balance> findPreviousBalance(String ownerid, String month, String chargeCode, String recType );
 }
