@@ -21,7 +21,4 @@ public class Balance {
 	private double sgst;
 	private double igst;
 	private double tds;
-	
-	
-	
 }

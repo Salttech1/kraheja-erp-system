@@ -39,9 +39,12 @@ public interface OutrateRepository extends JpaRepository<Outrate, OutrateCK> {
 	@Query("select o.outrEnddate from Outrate o where o.outrateCK.outrBldgcode=:bldgcode and o.outrateCK.outrWing=:wing and o.outrateCK.outrFlatnum =:flatnum and o.outrBilltype=:billtype") //NS 04.09.2023
 	String fetchEndDeteForAuxiGSTFirst(String bldgcode, String wing, String flatnum, String billtype);
 	
-	@Query("select o.outrAuxirate from Outrate o where o.outrateCK.outrBldgcode=:bldgcode and o.outrateCK.outrWing=:wing and o.outrateCK.outrFlatnum =:flatno and :month between o.outrateCK.outrStartdate and o.outrEnddate and o.outrBilltype=:billtype")
-	String findOutrAuxiRateMonthWise(String bldgcode, String wing, String flatno, String month, String billtype);
+	@Query("select nvl(o.outrAuxirate, 0) from Outrate o where o.outrateCK.outrBldgcode= :bldgcode and o.outrateCK.outrWing= :wing and o.outrateCK.outrFlatnum = :flatno and o.outrBilltype= :billtype")
+	String findOutrAuxiRateMonthWise(String bldgcode, String wing, String flatno, String billtype);
 	
-	@Query("select o.outrAuxiadmin from Outrate o where o.outrateCK.outrBldgcode=:bldgcode and o.outrateCK.outrWing=:wing and o.outrateCK.outrFlatnum =:flatno and :month between o.outrateCK.outrStartdate and o.outrEnddate and o.outrBilltype=:billtype")
-	String findAdminRateMonthWise(String bldgcode, String wing, String flatno, String month, String billtype);
+	@Query("select nvl(o.outrAuxiadmin, 0) from Outrate o where o.outrateCK.outrBldgcode= :bldgcode and o.outrateCK.outrWing= :wing and o.outrateCK.outrFlatnum = :flatno and o.outrBilltype= :billtype")
+	String findAdminRateMonthWise(String bldgcode, String wing, String flatno, String billtype);
+	
+	@Query("select nvl(o.outrInfra_Tds,0) as outrInfra_Tds from Outrate o where o.outrateCK.outrBldgcode= :bldgcode and o.outrateCK.outrWing= :wing and o.outrateCK.outrFlatnum = :flatno and o.outrBilltype= :billtype")
+	String findTdsRateMonthWise(String bldgcode, String wing, String flatno, String billtype);
 }
