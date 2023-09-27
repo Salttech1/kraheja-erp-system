@@ -47,4 +47,5 @@ public interface OutrateRepository extends JpaRepository<Outrate, OutrateCK> {
 	
 	@Query("select nvl(o.outrInfra_Tds,0) as outrInfra_Tds from Outrate o where o.outrateCK.outrBldgcode= :bldgcode and o.outrateCK.outrWing= :wing and o.outrateCK.outrFlatnum = :flatno and o.outrBilltype= :billtype")
 	String findTdsRateMonthWise(String bldgcode, String wing, String flatno, String billtype);
+	
 }

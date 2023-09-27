@@ -15,15 +15,22 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import kraheja.sales.bean.request.GenericRequest;
 import kraheja.sales.bean.request.OutinfraRequestBean;
+import kraheja.sales.bean.response.AuxilaryResponse;
+import kraheja.sales.infra.service.AuxilaryService;
 import kraheja.sales.infra.service.OutinfraService;
+import lombok.extern.log4j.Log4j2;
  
+@Log4j2
 @RestController
 @RequestMapping("/outinfra")
 public class OutinfraController {
 
 	@Autowired
 	private OutinfraService outinfraService;
+	@Autowired 
+	private AuxilaryService auxilaryService;
 	
 	//following function will fetch data of flatowner. 
 	
@@ -108,5 +115,16 @@ public class OutinfraController {
 	@DeleteMapping("/delete-outinfra")
 	public ResponseEntity<?> deleteOutinfra(@RequestParam(value = "bldgcode") String  bldgcode, @RequestParam(value = "ownerid") String  ownerid, @RequestParam(value = "recnum") String  recnum, @RequestParam(value = "month") String  month, @RequestParam(value = "narrcode") String  narrcode) throws ParseException {
 		return this.outinfraService.deleteOutinfra(bldgcode, ownerid, recnum, month, narrcode) ; 
+	}
+	
+	@PostMapping("/auxilary-fill-grid")
+	public ResponseEntity<AuxilaryResponse> gridData(@RequestBody GenericRequest request){
+		log.debug("post/request/outinfra/auxilary-fill-grid request : {}", request);
+		
+		AuxilaryResponse response = auxilaryService.getGridData(request);
+		log.debug("post/response/outinfra/auxilary-fill-grid incheq response : {}", response);
+		
+		return ResponseEntity.ok(response);
+		
 	}
 }

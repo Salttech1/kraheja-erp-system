@@ -24,7 +24,6 @@ spring:
     properties:
       hibernate:
         show_sql: true
-        sql: DEBUG
         proc:
           param_null_passing: true
           spring:
@@ -49,10 +48,9 @@ password:
   expiry: 10
   
 permitted:
-#  filters: /register,/h2-console/**,/report/**,/swagger-ui/**,/passwd/**,/certificate/**,/payroll/**,/test/**,/infra/**,/outinfra/**,/outgoing/**,/outrate/**
-  filters: "/**"
-  resources: /images/**,/js/**,/webjars/**,/index,html,/report/**,/v2/api-docs,/configuration/ui,/swagger-resources/**,/configuration/security,/swagger-ui.html,/building/**, /project/**,/purchase-bills/**,inspolendorsement/**,/admexph/**,/party/**,/inspolicy/**,/payroll/**,/test/**,/payrollreports/**,/infra/**,/outinfra/**,/outgoing/**,/outrate/**
-  
+  filters: /register,/h2-console/**,/report/**,/swagger-ui/**
+#  resources: /images/**,/js/**,/webjars/**,/index,html,/report/**,/v2/api-docs,/configuration/ui,/swagger-resources/**,/configuration/security,/swagger-ui.html
+  resources: /** 
 cors:
   allowed:
     domains: http://localhost:4200/,http://192.168.55.108:4200/,http://192.168.55.13:4200/,http://192.168.55.124:4200/,http://localhost:4201/,http://192.168.55.108:4201/,http://192.168.55.13:4201/,http://192.168.55.124:4201/
@@ -98,3 +96,4 @@ spring:
     activate:
         on-profile: pureng
     import: classpath:application-pureng.yml
+    

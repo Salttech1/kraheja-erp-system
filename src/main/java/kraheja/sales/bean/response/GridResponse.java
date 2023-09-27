@@ -17,14 +17,15 @@ public class GridResponse {
 	private String monthName;
 	private String narrationCode;
 	private String narration;
-	private String auxiPaid;
-	private String intPaid;
-	private String admin;
-	private String cgst;
-	private String sgst;
-	private String igst;
-	private String cgstPercent;
-	private String sgstPercent;
-	private String igstPercent;
-	private String tds;
+	private double auxiPaid;
+	private double intPaid;
+	private double admin;
+	private double cgst;
+	private double sgst;
+	private double igst;
+	private double cgstPercent;
+	private double sgstPercent;
+	private double igstPercent;
+	private double tds;
 }
+

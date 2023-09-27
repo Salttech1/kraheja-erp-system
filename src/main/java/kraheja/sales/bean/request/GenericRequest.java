@@ -15,6 +15,7 @@ import lombok.ToString;
 @AllArgsConstructor
 public class GenericRequest {
 	private String chargeCode;
+	private String narration;
 	private String billType;
 	private String buildingCode;
 	private String wing;

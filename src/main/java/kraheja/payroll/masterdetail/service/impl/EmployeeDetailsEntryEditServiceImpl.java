@@ -6,11 +6,9 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
@@ -20,7 +18,6 @@ import javax.persistence.Tuple;
 import javax.transaction.Transactional;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,7 +63,6 @@ import kraheja.payroll.repository.EmpexperienceRepository;
 import kraheja.payroll.repository.EmpfamilyRepository;
 import kraheja.payroll.repository.EmpjobinfoRepository;
 import kraheja.payroll.repository.EmpleaveinfoRepository;
-import kraheja.payroll.repository.EmployeeDetailsEntryEditRepository;
 import kraheja.payroll.repository.EmppersonalRepository;
 import kraheja.payroll.repository.EmpreferenceRepository;
 import kraheja.payroll.repository.EmpsalarypackageRepository;
@@ -112,9 +108,7 @@ public class EmployeeDetailsEntryEditServiceImpl implements EmployeeDetailsEntry
 	
 	@Autowired
 	private EntityManager entityManager;
-	
-	@Autowired
-	private EmployeeDetailsEntryEditRepository employeeDetailsEntryEditRepository;
+
 	
 	public ResponseEntity<?> fetchEmplDetails(String empcode) throws Exception{
 		EmployeeDetailsResponseBean employeeDetailsResponseBean = new EmployeeDetailsResponseBean();
@@ -242,62 +236,21 @@ public class EmployeeDetailsEntryEditServiceImpl implements EmployeeDetailsEntry
 			   empphotopath = CommonConstraints.INSTANCE.EMPPHOTOPATH + empcode.trim() + ".jpg";
 		    } else {
 		    	empphotopath = CommonConstraints.INSTANCE.EMPPHOTOPATH + "employee.jpg";
-		    } 
+		    } // Error message.
 
 		empPhoto = ImageToByteArray.imagetoblob(empphotopath);
 		employeeDetailsResponseBean.setEmpPhoto(empPhoto);
 		
 		
-////		String SQuery = "select (select efor_formula from emppayformula where efor_coy = 'UNIQ' and efor_emptype = 'S' and efor_jobtype = 'P' and efor_earndedcode = 'MTHLYGROSS') as gross from v_empsalarypackage where vspk_empcode = 'WD009' and vspk_todate = '01-JAN-2050' ";
-//		String SQuery = "select ('Select ' || efor_formula || ' from v_empsalarypackage where vspk_empcode = ' || '''WD009''' || ' and vspk_todate = ' || '''01-JAN-2050''') as Q from emppayformula where efor_coy = 'UNIQ' and efor_emptype = 'S' and efor_jobtype = 'P' and efor_earndedcode = 'MTHLYGROSS'";
+//		String SQuery = "select (select efor_formula from emppayformula where efor_coy = 'UNIQ' and efor_emptype = 'S' and efor_jobtype = 'P' and efor_earndedcode = 'MTHLYGROSS') as gross from v_empsalarypackage where vspk_empcode = 'WD009' and vspk_todate = '01-JAN-2050' ";
 //		Query q = entityManager.createNativeQuery(SQuery);
-//		List<String> resultSet = q.getResultList();
-//		
+//		List<Object[]> resultSet = q.getResultList();
 //		logger.info("MonthGross :: {}", resultSet);
-//		System.out.println("Query is "+ resultSet);
-//		String SMQuery = "";
-//		for(String FQuery:resultSet) 
-//			SMQuery = FQuery;
 //		
+//		String SMQuery = "select " + resultSet + " from v_empsalarypackage where vspk_empcode = 'WD009' and vspk_todate = '01-JAN-2050' ";
 //		Query newq = entityManager.createNativeQuery(SMQuery);
 //		List<Object[]> newresultSet = newq.getResultList();
 //		logger.info("MonthGrossAmount :: {}", newresultSet);
-		
-//		logger.info("Coy :: {}", empjobinfolist.get(0).getEjinCompany());
-//		logger.info("Emptype :: {}",empjobinfolist.get(0).getEjinEmptype());
-//		logger.info("Jobtype :: {}",empjobinfolist.get(0).getEjinJobtype());
-//		
-//		String MonthlyGrossQuery = employeeDetailsEntryEditRepository.GetMonthGrossQuery(empcode,empjobinfolist.get(0).getEjinCompany(),empjobinfolist.get(0).getEjinEmptype(),empjobinfolist.get(0).getEjinJobtype());
-//		logger.info("MonthGrossQuery :: {}", MonthlyGrossQuery);
-//		
-//		Query newq = entityManager.createNativeQuery(MonthlyGrossQuery);
-//		List<Object[]> newresultSet = newq.getResultList();
-//		logger.info("MonthGrossAmount :: {}", newresultSet);
-		
-//		Double MonthlyGross = employeeDetailsEntryEditRepository.GetMonthGross(MonthlyGrossQuery);
-//		logger.info("MonthGrossAmount :: {}", MonthlyGross);
-		
-		if(CollectionUtils.isNotEmpty(emppersonallist)) {
-		Tuple empjobinfodetforpayformula = employeeDetailsEntryEditRepository.GetEmployeeJobinfoForFormula(empcode);
-		if(Objects.nonNull(empjobinfodetforpayformula)) {
-			String coy = empjobinfodetforpayformula.get(0, String.class).trim();
-			char emptype = empjobinfodetforpayformula.get(1, Character.class);
-			char jobtype = empjobinfodetforpayformula.get(2, Character.class);
-			String formulaMthlyGross = employeeDetailsEntryEditRepository.GetFormula(coy, emptype, jobtype, "MTHLYGROSS");
-			
-			Query queryMthlyGross = entityManager.createNativeQuery(formulaMthlyGross);
-			queryMthlyGross.setParameter("empcode", empcode.trim());
-			List mthlyGrossresultSet = queryMthlyGross.getResultList();
-			employeeDetailsResponseBean.setMTHLYGROSS(mthlyGrossresultSet);
-			
-			
-			String formulaCTC = employeeDetailsEntryEditRepository.GetFormula(coy, emptype, jobtype, "CTC");
-			Query queryCTC = entityManager.createNativeQuery(formulaCTC);
-			queryCTC.setParameter("empcode", empcode.trim());
-			List CTCresultSet = queryCTC.getResultList();
-			employeeDetailsResponseBean.setCTC(CTCresultSet);
-		}
-		}
 		
 		if(Objects.nonNull(employeeDetailsResponseBean)) {
 			return ResponseEntity.ok(ServiceResponseBean.builder().status(Boolean.TRUE).data(employeeDetailsResponseBean).build());	

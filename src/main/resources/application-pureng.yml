@@ -22,4 +22,4 @@ feign.client:
   url: ${feign-url:http://localhost:9091}
   
 ---
-report-jobs-path: ${REPORT_JOBS_PATH:////ADSRV//temp-report//}
+report-jobs-path: ${REPORT_JOBS_PATH:////PRODSRV//temp-report//}

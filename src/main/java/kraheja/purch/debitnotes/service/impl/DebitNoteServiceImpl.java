@@ -246,20 +246,34 @@ public class DebitNoteServiceImpl implements DebitNoteService {
 						Double localBillQty = pbilldEntity.getPbldQuantity();
 						Double localBillDbQty = pbilldEntity.getPbldDbqty();
 						Double localBillDeqty = pbilldEntity.getPbldDequantity();
+						
 						Double localDeqty = dbnoted.getDequantity();
-						if(Objects.nonNull(pbilldEntity) && dbnoted.getQuantity() > 0 ) {
-							pbilldEntity.setPbldQuantity(localBillQty - dbnoted.getQuantity());
-							pbilldEntity.setPbldDbqty(localBillDbQty + dbnoted.getQuantity());
-							pbilldEntity.setPbldDequantity(localBillDeqty - localDeqty);
-							pbilldEntity.setPbldToday(LocalDateTime.now());
-							pbilldEntity.setPbldUserid(GenericAuditContextHolder.getContext().getUserid().trim());
-							pbilldEntity.setPbldSite(GenericAuditContextHolder.getContext().getSite().trim());
-							this.pbilldRepository.save(pbilldEntity);
-						}
+//start of commented by vicky 14-09-2023
+//						if(Objects.nonNull(pbilldEntity) && dbnoted.getQuantity() > 0 ) {
+//							pbilldEntity.setPbldQuantity(localBillQty - dbnoted.getQuantity());
+//							pbilldEntity.setPbldDbqty(localBillDbQty + dbnoted.getQuantity());
+//							pbilldEntity.setPbldDequantity(localBillDeqty - localDeqty);
+//							pbilldEntity.setPbldToday(LocalDateTime.now());
+//							pbilldEntity.setPbldUserid(GenericAuditContextHolder.getContext().getUserid().trim());
+//							pbilldEntity.setPbldSite(GenericAuditContextHolder.getContext().getSite().trim());
+//							this.pbilldRepository.save(pbilldEntity);
+//						}
+//end of commented by vicky 14-09-2023
 
 						dbnotedEntityList.stream().filter(dbNotedFilter -> {
 							return dbnoted.getDbnoteser().equals(dbNotedFilter.getDbnotedCK().getDbndDbnoteser()) && dbnoted.getLineno().equals(dbNotedFilter.getDbnotedCK().getDbndLineno());
 						}).map(dbnotedEntity ->{
+							//start of added by vicky 14-09-2023
+							if(Objects.nonNull(pbilldEntity) && dbnoted.getQuantity() > 0 ) {
+								pbilldEntity.setPbldQuantity(localBillQty + dbnotedEntity.getDbndDequantity() - dbnoted.getQuantity());
+								pbilldEntity.setPbldDbqty(localBillDbQty - dbnotedEntity.getDbndDequantity() + dbnoted.getQuantity());
+								pbilldEntity.setPbldDequantity(localBillDeqty + dbnotedEntity.getDbndDequantity() - localDeqty);
+								pbilldEntity.setPbldToday(LocalDateTime.now());
+								pbilldEntity.setPbldUserid(GenericAuditContextHolder.getContext().getUserid().trim());
+								pbilldEntity.setPbldSite(GenericAuditContextHolder.getContext().getSite().trim());
+								this.pbilldRepository.save(pbilldEntity);
+							}
+							//end of added by vicky 14-09-2023
 //							if(Objects.nonNull(pbilldEntity)) {
 //								pbilldEntity.setPbldQuantity(dbnotedEntity.getDbndAmount());  need to ask about this
 //								pbilldEntity.setPbldToday(LocalDateTime.now());
