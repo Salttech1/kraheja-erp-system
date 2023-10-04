@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import kraheja.arch.projbldg.dataentry.entity.Building ;
 import kraheja.arch.projbldg.dataentry.entity.BuildingCK;
+import kraheja.sales.bean.entitiesresponse.AuxiBuildingDBResponse;
 @Repository
 public interface BuildingRepository extends JpaRepository<Building, BuildingCK> {
 
@@ -19,5 +20,8 @@ public interface BuildingRepository extends JpaRepository<Building, BuildingCK> 
 	
 	@Query("select e.projCompany  from Project e WHERE trim(e.projectCK.projCode) = :code")
 	String findProjectCompanyByCode(String code) ; //NS 16.03.2023 
+	
+	@Query("select new kraheja.sales.bean.entitiesresponse.AuxiBuildingDBResponse(b.bldgProp, b.bldgProperty, b.bldgProject, b.bldgCoy, b.bldgMaintcoy) from Building b where b.buildingCK.bldgCode= :bldgCode")
+	AuxiBuildingDBResponse findBuildingByCode(String bldgCode);
 
 }

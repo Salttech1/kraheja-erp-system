@@ -4,7 +4,8 @@ spring:
   profiles.active: mumbaitest
   mvc:
     pathmatch:
-        matching-strategy: ant_path_matcher
+        matching-strategy: ANT_PATH_MATCHER
+    
     hikari: 
      minimum-idle: ${hikari_minimum_idle:2}
      maximum-pool-size: ${hikari_maximum_pool_size:10}
@@ -20,13 +21,13 @@ spring:
     hibernate:
       use-new-id-generator-mappings: false
       ddl-auto: none
-    #database-platform: org.hibernate.dialect.Oracle12cDialect
-    properties:
-      hibernate:
-        show_sql: true
-        proc:
-          param_null_passing: true
-          spring:
+    database-platform: org.hibernate.dialect.Oracle12cDialect
+#    properties:
+#      hibernate:
+#        show_sql: true
+#        proc:
+#          param_null_passing: true
+#          spring:
 #DO NOT CHANGE DDL-AUTO SETTING
 
 ---
@@ -64,9 +65,9 @@ swagger2:
     name: KRAHEJA
     url:
     email:
-#logging:
-# level:
-#    org.hibernate.SQL: DEBUG
+logging:
+ level:
+    org.hibernate.SQL: DEBUG
 #    org.hibernate.type: TRACE
 
 ---

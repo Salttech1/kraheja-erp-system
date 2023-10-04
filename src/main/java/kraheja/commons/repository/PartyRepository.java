@@ -8,6 +8,7 @@ import javax.persistence.Tuple;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import kraheja.commons.entity.Party;
@@ -30,4 +31,7 @@ public interface PartyRepository extends JpaRepository<Party, PartyCK>, CrudRepo
 	@Query("SELECT e FROM Party e WHERE trim(e.partyCk.parPartycode) = :partycode AND trim(e.partyCk.parPartytype) = :partytype " +
             "AND (Upper(e.parPartyname) like '%LTD%' or upper(e.parPartyname) like '%LIMITED%' )")
 	Party findLimitedPartyByCode(String partycode, String partytype);
+	
+	@Query("select max(p.partyCk.parPartycode) from Party p where trim(p.partyCk.parPartycode) LIKE :partyCode and p.partyCk.parPartytype =:partyType")
+	String getPartyCode(@Param("partyCode") String partyCode, @Param("partyType") String partyType);
 }

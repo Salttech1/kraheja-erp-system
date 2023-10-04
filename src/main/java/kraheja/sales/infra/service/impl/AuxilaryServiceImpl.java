@@ -16,18 +16,17 @@ import org.springframework.stereotype.Service;
 import kraheja.commons.entity.Hsnsacmaster;
 import kraheja.commons.repository.HsnsacmasterRepository;
 import kraheja.sales.bean.entitiesresponse.Balance;
-import kraheja.sales.bean.request.GenericRequest;
+import kraheja.sales.bean.request.AuxilaryRequest;
 import kraheja.sales.bean.response.AuxilaryResponse;
 import kraheja.sales.bean.response.GridResponse;
 import kraheja.sales.infra.service.AuxilaryService;
+import kraheja.sales.infra.utilities.EndMonthGenerator;
 import kraheja.sales.repository.OutinfraRepository;
 import kraheja.sales.repository.OutrateRepository;
 
 @Service
 public class AuxilaryServiceImpl implements AuxilaryService {
 	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-
-	private String lastMonth;
 
 	@Autowired
 	private HsnsacmasterRepository hsnsacmasterRepository;
@@ -38,7 +37,7 @@ public class AuxilaryServiceImpl implements AuxilaryService {
 
 	
 	@Override
-	public AuxilaryResponse getGridData(GenericRequest request) {
+	public AuxilaryResponse getGridData(AuxilaryRequest request) {
 
 		String strStartDate = null;
 		/**
@@ -60,21 +59,17 @@ public class AuxilaryServiceImpl implements AuxilaryService {
 		try {
 			if (!balanceList.isEmpty()) {
 				for (Balance balance : balanceList) {
-					String month = balance.getMonth();
-					if (lastMonth != null || month.compareTo(lastMonth) > 0) {
-						lastMonth = month;
-					}
 				}
 			}
-
-			log.debug("lastMonth : {}", lastMonth);
-
 			request.setDate(strStartDate);
 			List<GridResponse> respone = taxCalculation(request);
 			log.debug("respone : {}", respone);
-
+			
+			String totalMonthCount = String.valueOf(respone.size());
+			String endMonth = EndMonthGenerator.endMonth((respone.size()-1) + Integer.parseInt(strStartDate));
+			
 			return AuxilaryResponse.builder().result("success").responseCode("00").message("successfully fetch.")
-					.startMonth(strStartDate).endMonth(String.valueOf(00)).totalMonth(String.valueOf(respone.size()))
+					.startMonth(strStartDate).endMonth(endMonth).totalMonth(totalMonthCount)
 					.data(respone).build();
 
 		} catch (Exception e) {
@@ -111,7 +106,7 @@ public class AuxilaryServiceImpl implements AuxilaryService {
 		return strYearMonth;
 	}
 
-	public List<GridResponse> taxCalculation(GenericRequest request) {
+	public List<GridResponse> taxCalculation(AuxilaryRequest request) {
 		List<GridResponse> insertRowList = new ArrayList<>();
 		
 		String buildingCode = request.getBuildingCode();
@@ -119,6 +114,7 @@ public class AuxilaryServiceImpl implements AuxilaryService {
 		String flatNum = request.getFlatNum();
 		String date = request.getDate();
 		String billType = request.getBillType();
+		String narration = request.getNarration();
 		double amount = Double.parseDouble(request.getTotalAmt());
 		double receiptTds = Double.parseDouble(request.getReceiptAmtTds());
 
@@ -356,7 +352,7 @@ public class AuxilaryServiceImpl implements AuxilaryService {
 			double cgst = adjCGSTAdmin + adjCGSTMaint;
 			double sgst = adjSGSTAdmin + adjSGSTMaint;
 			double igst = adjIGSTAdmin + adjIGSTMaint;
-			GridResponse response = insertRow(date, adjAdmin, adjMaint, cgst, sgst, igst, adjTDS, cgstPerc, sgstPerc, igstPerc);
+			GridResponse response = insertRow(date, adjAdmin, adjMaint, cgst, sgst, igst, adjTDS, cgstPerc, sgstPerc, igstPerc, narration);
 			insertRowList.add(response);
 			
 			date = increaseMonth(date);
@@ -365,229 +361,11 @@ public class AuxilaryServiceImpl implements AuxilaryService {
 		return insertRowList;
 	}
 
-	public double calculateAllocation(double amount, double adminRate, double maintRate, double receiptTds,
-			double tdsRate, double prevAdminPaid, double prevMaintPaid, double prevAmtintPaid, double prevCGSTtaxPaid,
-			double prevSGSTtaxPaid, double prevIGSTtaxPaid, double prevTDStaxPaid, String billType, String date) {
-
-		Hsnsacmaster gst = hsnsacmasterRepository.findByHsnsacmasterCKHsmsCode("995419");
-		Double cgstPerc = gst.getHsmsCgstperc();
-		Double sgstPerc = gst.getHsmsSgstperc();
-		Double igstPerc = 0.00;
-		
-		double prevCGSTAdmin = 0;
-		double prevSGSTAdmin;
-		double prevIGSTAdmin;
-		double prevCGSTMaint = 0;
-		double prevSGSTMaint = 0;
-		double prevIGSTMaint;
-		double cgstOnAdminRate;
-		double sgstOnAdminRate; 
-		double igstOnAdminRate = 0;
-		double cgstOnMaintRate;
-		double sgstOnMaintRate;
-		double igstOnMaintRate;
-		double prevCgstAdmin;
-		double adjAdmin;
-		double adjMaint;
-		double adjTDS = 0;
-		double adjCGSTAdmin;
-		double adjSGSTAdmin;
-		double adjIGSTAdmin;
-		double adjCGSTMaint;
-		double adjSGSTMaint;
-		double adjIGSTMaint;
-
-		// Returns Unadjusted Receipt Amount
-		if (amount <= 0) {
-			return amount;
-		}
-
-		// Calculate GST ON ADMIN
-		if (billType.equals("F")) {
-			cgstOnAdminRate = (int) Math.round((cgstPerc * adminRate) / 100.0);
-			sgstOnAdminRate = (int) Math.round((sgstPerc * adminRate) / 100.0);
-			sgstOnAdminRate = (int) Math.round((igstPerc * adminRate) / 100.0);
-
-			cgstOnMaintRate = (int) Math.round((cgstPerc * maintRate) / 100.0);
-			sgstOnMaintRate = (int) Math.round((sgstPerc * maintRate) / 100.0);
-			igstOnMaintRate = (int) Math.round((igstPerc * maintRate) / 100.0);
-		} else {
-			cgstOnAdminRate = (int) Math.ceil((cgstPerc * adminRate) / 100.0);
-			sgstOnAdminRate = (int) Math.ceil((sgstPerc * adminRate) / 100.0);
-			igstOnAdminRate = (int) Math.ceil((igstPerc * adminRate) / 100.0);
-
-			cgstOnMaintRate = (int) Math.ceil((cgstPerc * maintRate) / 100.0);
-			sgstOnMaintRate = (int) Math.ceil((sgstPerc * maintRate) / 100.0);
-			igstOnMaintRate = (int) Math.ceil((igstPerc * maintRate) / 100.0);
-		}
-
-		// Bifurcate GST into Admin GST and Maint GST
-		if (prevCGSTtaxPaid >= cgstOnAdminRate) {
-			prevCgstAdmin = cgstOnAdminRate;
-		} else {
-			prevCgstAdmin = prevCGSTtaxPaid;
-		}
-
-		if (prevSGSTtaxPaid >= sgstOnAdminRate) {
-			prevSGSTAdmin = sgstOnAdminRate;
-			prevSGSTMaint = prevSGSTtaxPaid - prevSGSTAdmin;
-		} else {
-			prevSGSTAdmin = prevSGSTtaxPaid;
-		}
-
-		if (prevIGSTtaxPaid >= igstOnAdminRate) {
-			prevIGSTAdmin = igstOnAdminRate;
-			prevIGSTMaint = prevIGSTtaxPaid - prevIGSTAdmin;
-		} else {
-			prevIGSTAdmin = prevIGSTtaxPaid;
-			prevIGSTMaint = 0;
-		}
-
-		// Check if FULL Amount already received
-		if ((prevAdminPaid + prevCGSTAdmin + prevSGSTAdmin + prevIGSTAdmin + prevAmtintPaid + prevCGSTMaint
-				+ prevSGSTMaint + prevIGSTMaint) >= (adminRate + cgstOnAdminRate + sgstOnAdminRate + igstOnAdminRate
-						+ maintRate + cgstOnMaintRate + sgstOnMaintRate + igstOnMaintRate)) {
-			return amount;
-		}
-
-		// If Admin amount remains to be adjusted
-		/***************** ADMIN Start **************************************/
-		adjAdmin = adminRate - prevAdminPaid;
-		adjCGSTAdmin = cgstOnAdminRate - prevCgstAdmin;
-		adjSGSTAdmin = sgstOnAdminRate - prevSGSTAdmin;
-		adjIGSTAdmin = igstOnAdminRate - prevIGSTAdmin;
-
-		if ((adjAdmin + adjCGSTAdmin + adjSGSTAdmin + adjIGSTAdmin) > 0 && amount > 0) {
-
-			if (amount >= (adjAdmin + adjCGSTAdmin + adjSGSTAdmin + adjIGSTAdmin)) {
-
-				amount = amount - (adjAdmin + adjCGSTAdmin + adjSGSTAdmin + adjIGSTAdmin);
-			} else {
-				if (amount <= 2) {
-					adjAdmin = amount;
-					adjCGSTAdmin = 0;
-					adjSGSTAdmin = 0;
-					adjIGSTAdmin = 0;
-					amount = 0;
-				} else {
-					double factor = (amount / (adjAdmin + adjCGSTAdmin + adjSGSTAdmin + adjIGSTAdmin));
-					if (billType.equals("F")) {
-						int adjCGSTAdm = (int) Math.round(adjCGSTAdmin * factor);
-						adjCGSTAdmin = adjCGSTAdm;
-
-						int adjSGSTAdm = (int) Math.round(adjSGSTAdmin * factor);
-						adjSGSTAdmin = adjSGSTAdm;
-
-						int adjIGSTAdm = (int) Math.round(adjIGSTAdmin * factor);
-						adjIGSTAdmin = adjIGSTAdm;
-
-					} else {
-						adjCGSTAdmin = Math.ceil(adjCGSTAdmin * factor);
-						adjSGSTAdmin = Math.ceil(adjSGSTAdmin * factor);
-						adjIGSTAdmin = Math.ceil(adjIGSTAdmin * factor);
-					}
-					adjAdmin = amount - adjCGSTAdmin - adjSGSTAdmin - adjIGSTAdmin;
-					amount = 0;
-				}
-			}
-
-		} else {
-			adjAdmin = 0;
-			adjCGSTAdmin = 0;
-			adjSGSTAdmin = 0;
-			adjIGSTAdmin = 0;
-		}
-
-		/***************** ADMIN END **************************************/
-
-		// If MAINT amount remains to be adjusted
-		/***************** MAINT Start **************************************/
-		adjMaint = maintRate - prevAdminPaid;
-		adjCGSTMaint = cgstOnMaintRate - prevCGSTMaint;
-		adjSGSTMaint = sgstOnMaintRate - prevSGSTMaint;
-		adjIGSTMaint = igstOnMaintRate - prevIGSTMaint;
-
-		if ((adjMaint + adjCGSTMaint + adjSGSTMaint + adjIGSTMaint) > 0 && amount > 0) {
-
-			if (amount >= (adjMaint + adjCGSTMaint + adjSGSTMaint + adjIGSTMaint)) {
-				amount = amount - (adjMaint + adjCGSTMaint + adjSGSTMaint + adjIGSTMaint);
-
-			} else {
-				if (amount <= 2) {
-					adjMaint = amount;
-					adjCGSTMaint = 0;
-					adjSGSTMaint = 0;
-					adjIGSTMaint = 0;
-					amount = 0;
-				} else {
-					double factor = amount / (adjMaint + adjCGSTMaint + adjSGSTMaint + adjIGSTMaint);
-					if (billType.equals("F")) {
-						int adjCGSTMa = (int) Math.round(adjCGSTMaint * factor);
-						adjCGSTMaint = adjCGSTMa;
-
-						int adjSGSTMa = (int) Math.round(adjSGSTMaint * factor);
-						adjCGSTMaint = adjSGSTMa;
-
-						int adjIGSTMa = (int) Math.round(adjIGSTMaint * factor);
-						adjIGSTMaint = adjIGSTMa;
-
-					} else {
-						adjCGSTMaint = Math.ceil(adjCGSTMaint * factor);
-						adjSGSTMaint = Math.ceil(adjSGSTMaint * factor);
-						adjIGSTMaint = Math.ceil(adjIGSTMaint * factor);
-					}
-					adjMaint = amount - adjCGSTMaint - adjSGSTMaint - adjIGSTMaint;
-					amount = 0;
-				}
-			}
-		} else {
-			adjMaint = 0;
-			adjCGSTMaint = 0;
-			adjSGSTMaint = 0;
-			adjIGSTMaint = 0;
-		}
-		/***************** MAINT END **************************************/
-
-		// If TDS amount remains to be adjusted
-		/***************** TDS Start **************************************/
-		// Check if FULL Amount already received
-
-		if (receiptTds < 0) {
-			if (prevTDStaxPaid <= tdsRate) {
-
-			} else {
-				adjTDS = tdsRate - prevTDStaxPaid;
-
-				if (adjTDS < 0) {
-
-					if (receiptTds < adjTDS) {
-
-						receiptTds = receiptTds - adjTDS;
-
-					} else {
-
-						adjTDS = receiptTds;
-
-						receiptTds = 0;
-					}
-				} else {
-					adjTDS = 0;
-				}
-			}
-		}
-		
-		double cgst = adjCGSTAdmin + adjCGSTMaint;
-		double sgst = adjSGSTAdmin + adjSGSTMaint;
-		double igst = adjIGSTAdmin + adjIGSTMaint;
-		insertRow(date, adjAdmin, adjMaint, cgst, sgst, igst, adjTDS, cgstPerc, sgstPerc, igstPerc);
-		return amount;
-	}
-
 	private GridResponse insertRow(String startDate, double adjAdmin, double adjMaint, double cgst, double sgst, double igst,
-			double adjTDS, double cgstPerc, double sgstPerc, double igstPerc) {
+			double adjTDS, double cgstPerc, double sgstPerc, double igstPerc, String narration) {
 		List<GridResponse> list = new ArrayList<>();
 		
-		GridResponse response = GridResponse.builder().monthName(startDate).narration("").narrationCode("FP").intPaid(0).cgst(cgst)
+		GridResponse response = GridResponse.builder().monthName(startDate).narration(narration).narrationCode("FP").intPaid(0).cgst(cgst)
 				.sgst(sgst).igst(igst).auxiPaid(adjMaint).admin(adjAdmin).cgstPercent(cgstPerc).sgstPercent(sgstPerc)
 				.igstPercent(igstPerc).tds(adjTDS).build();
 

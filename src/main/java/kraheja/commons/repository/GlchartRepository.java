@@ -1,11 +1,14 @@
 package kraheja.commons.repository;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import kraheja.commons.entity.Glchart;
 import kraheja.commons.entity.GlchartCK;
+import kraheja.sales.bean.entitiesresponse.GlchartDBResponse;
 
 @Repository
 public interface GlchartRepository extends JpaRepository<Glchart, GlchartCK> {
@@ -26,4 +29,8 @@ public interface GlchartRepository extends JpaRepository<Glchart, GlchartCK> {
 	
 	@Query("SELECT NVL(e.chartMinoryn, ' '), NVL(e.chartValidminors, ' '), NVL(e.chartValidparties, ' ') FROM Glchart e WHERE trim(e.glChartCK.chartAcnum) = :acnum ")
 	String findchartMinorAndchartValidPartiesByCharAcnum(String acnum);
+	
+	@Query("select new kraheja.sales.bean.entitiesresponse.GlchartDBResponse(g.chartCfrecgroup, g.chartRgroupc) from Glchart g where g.glChartCK.chartAcnum= :chartAcnum and g.glChartCK.chartClosedate is null")
+	GlchartDBResponse fetchChartCfrecgroup(String chartAcnum);
+
 }

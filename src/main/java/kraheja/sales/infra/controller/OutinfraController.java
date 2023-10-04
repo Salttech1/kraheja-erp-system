@@ -1,6 +1,7 @@
 package kraheja.sales.infra.controller;
 
 import java.text.ParseException;
+import java.util.List;
 
 import javax.validation.Valid;
 
@@ -15,10 +16,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import kraheja.sales.bean.request.GenericRequest;
+import kraheja.payroll.GenericResponse;
+import kraheja.sales.bean.request.AuxilaryRequest;
+import kraheja.sales.bean.request.InchequeRequest;
 import kraheja.sales.bean.request.OutinfraRequestBean;
 import kraheja.sales.bean.response.AuxilaryResponse;
+import kraheja.sales.bean.response.GridResponse;
 import kraheja.sales.infra.service.AuxilaryService;
+import kraheja.sales.infra.service.AuxiliaryPersistanceService;
 import kraheja.sales.infra.service.OutinfraService;
 import lombok.extern.log4j.Log4j2;
  
@@ -31,6 +36,8 @@ public class OutinfraController {
 	private OutinfraService outinfraService;
 	@Autowired 
 	private AuxilaryService auxilaryService;
+	
+	@Autowired private AuxiliaryPersistanceService auxiPersistanceService;
 	
 	//following function will fetch data of flatowner. 
 	
@@ -117,14 +124,23 @@ public class OutinfraController {
 		return this.outinfraService.deleteOutinfra(bldgcode, ownerid, recnum, month, narrcode) ; 
 	}
 	
-	@PostMapping("/auxilary-fill-grid")
-	public ResponseEntity<AuxilaryResponse> gridData(@RequestBody GenericRequest request){
+	@PostMapping("/auxilary-allocation-grid")
+	public ResponseEntity<AuxilaryResponse> gridData(@RequestBody AuxilaryRequest request){
 		log.debug("post/request/outinfra/auxilary-fill-grid request : {}", request);
 		
 		AuxilaryResponse response = auxilaryService.getGridData(request);
 		log.debug("post/response/outinfra/auxilary-fill-grid incheq response : {}", response);
 		
 		return ResponseEntity.ok(response);
+	}
+	
+	@PostMapping("/save-incheqe-details")
+	public ResponseEntity<GenericResponse> saveIncheqe(@RequestParam String buildingCode, @RequestParam String wing, @RequestParam String flatNumber, @RequestParam String chargeCode, @RequestBody InchequeRequest inchequeRequest){
+		log.debug("post/request/outinfra/saveIncheqe buildingCode : {} wing:{} flatNumber: {} chargeCode: {} inchequeRequest: {}", buildingCode, wing, flatNumber, chargeCode, inchequeRequest);
 		
+		String response = auxiPersistanceService.saveIncheqe(buildingCode, wing, flatNumber, chargeCode, inchequeRequest);
+		log.debug("post/response/saveIncheqe : {}",response);
+		
+		return ResponseEntity.ok(GenericResponse.builder().result("succes").responseCode("00").message(response).build());
 	}
 }
