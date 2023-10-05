@@ -22,6 +22,7 @@ import kraheja.sales.bean.request.InchequeRequest;
 import kraheja.sales.bean.request.OutinfraRequestBean;
 import kraheja.sales.bean.response.AuxilaryResponse;
 import kraheja.sales.bean.response.GridResponse;
+import kraheja.sales.bean.response.InchequeResponse;
 import kraheja.sales.infra.service.AuxilaryService;
 import kraheja.sales.infra.service.AuxiliaryPersistanceService;
 import kraheja.sales.infra.service.OutinfraService;
@@ -135,12 +136,20 @@ public class OutinfraController {
 	}
 	
 	@PostMapping("/save-incheqe-details")
-	public ResponseEntity<GenericResponse> saveIncheqe(@RequestParam String buildingCode, @RequestParam String wing, @RequestParam String flatNumber, @RequestParam String chargeCode, @RequestBody InchequeRequest inchequeRequest){
+	public ResponseEntity<InchequeResponse> saveIncheqe(
+			@RequestParam String buildingCode, 
+			@RequestParam String wing,
+			@RequestParam String flatNumber, 
+			@RequestParam String chargeCode,
+			@RequestParam String siteName, 
+			@RequestParam String userId,
+			@RequestBody InchequeRequest inchequeRequest){
+		
 		log.debug("post/request/outinfra/saveIncheqe buildingCode : {} wing:{} flatNumber: {} chargeCode: {} inchequeRequest: {}", buildingCode, wing, flatNumber, chargeCode, inchequeRequest);
 		
-		String response = auxiPersistanceService.saveIncheqe(buildingCode, wing, flatNumber, chargeCode, inchequeRequest);
+		InchequeResponse response = auxiPersistanceService.saveIncheqe(buildingCode, wing, flatNumber, chargeCode,siteName,userId, inchequeRequest);
 		log.debug("post/response/saveIncheqe : {}",response);
 		
-		return ResponseEntity.ok(GenericResponse.builder().result("succes").responseCode("00").message(response).build());
+		return ResponseEntity.ok(response);
 	}
 }

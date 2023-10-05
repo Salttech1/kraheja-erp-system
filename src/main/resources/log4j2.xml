@@ -57,11 +57,6 @@
 			<AppenderRef ref="console" />
 		</Logger>
 		
-		<Logger name="com.zaxxer" level="debug" additivity="false" includeLocation="true">
-			<AppenderRef ref="file-jdbcpool" />
-			<AppenderRef ref="console" />
-		</Logger>
-		
 		<Root level="info" includeLocation="true">
 			<AppenderRef ref="file-api" />
 			<AppenderRef ref="console" />

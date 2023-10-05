@@ -1,24 +1,14 @@
 package kraheja.sales.infra.service.impl;
 
-import java.lang.invoke.MethodHandles;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import com.google.common.base.Optional;
 
 import kraheja.arch.projbldg.dataentry.repository.BuildingRepository;
 import kraheja.commons.entity.Inchq;
@@ -27,37 +17,58 @@ import kraheja.commons.repository.CompanyRepository;
 import kraheja.commons.repository.GlchartRepository;
 import kraheja.commons.repository.InchqRepository;
 import kraheja.commons.repository.PartyRepository;
+import kraheja.constant.ApiResponseCode;
+import kraheja.constant.ApiResponseMessage;
+import kraheja.constant.Result;
+import kraheja.exception.InternalServerError;
 import kraheja.sales.bean.entitiesresponse.AuxiBuildingDBResponse;
 import kraheja.sales.bean.entitiesresponse.GlchartDBResponse;
+import kraheja.sales.bean.request.ChequeRequest;
 import kraheja.sales.bean.request.InchequeRequest;
 import kraheja.sales.bean.response.GridResponse;
+import kraheja.sales.bean.response.InchequeDetailResponse;
+import kraheja.sales.bean.response.InchequeResponse;
+import kraheja.sales.entity.Outinfra;
+import kraheja.sales.entity.OutinfraCK;
 import kraheja.sales.infra.service.AuxiliaryPersistanceService;
+import kraheja.sales.infra.utilities.ReceiptNumberGenerator;
+import kraheja.sales.repository.OutinfraRepository;
 import lombok.extern.log4j.Log4j2;
 
 /**
- * <p>this class is use to persist data row wise in database.</p>
+ * <p>
+ * this class is use to persist data row wise in database.
+ * </p>
+ * 
  * @author sazzad.alom
  * @since 28-OCTBER-2023
  * @version 1.0.0
- * */
+ */
 @Log4j2
 @Service
 public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceService {
 
-	@Autowired private PartyRepository partyRepository;
-	@Autowired private BuildingRepository buildingRepository;
-	@Autowired private  GlchartRepository glchartRepository;
-	@Autowired private CompanyRepository companyRepository;
-	@Autowired private InchqRepository inchqRepository;
-
-
-
+	@Autowired
+	private PartyRepository partyRepository;
+	@Autowired
+	private BuildingRepository buildingRepository;
+	@Autowired
+	private GlchartRepository glchartRepository;
+	@Autowired
+	private CompanyRepository companyRepository;
+	@Autowired
+	private InchqRepository inchqRepository;
 	
+	@Autowired
+	private OutinfraRepository outinfraRepository;
+
 	/**
-	 * <p>this method is use to get party code and minor map.</p>
-	 * */
-	private Map<String, String> getPartyCodeAndMinor(String bldgCode, String wing, String flatNumber, String chargeCode) {
-		
+	 * <p>
+	 * this method is use to get party code and minor map.
+	 * </p>
+	 */
+	private Map<String, String> getPartyCodeAndMinor(String bldgCode, String wing, String flatNumber,String chargeCode) {
+
 		Map<String, String> partyCodeMinorMap = new HashMap<>();
 		String partyCode = "";
 		String lastOwnerid = "";
@@ -73,21 +84,20 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 			wing = " ";
 		}
 		partyCode = bldgCode + wing + flatNumber + "%";
-		
-		
+
 		lastOwnerid = partyRepository.getPartyCode(partyCode, "F");
 		log.debug("partyCode from db : {}", lastOwnerid);
-		
+
 		if (lastOwnerid.equals("")) {
-			ownerIdCount=1;
-		}else {
+			ownerIdCount = 1;
+		} else {
 			ownerIdCount = Integer.parseInt(lastOwnerid.substring(lastOwnerid.length() - 1));
 		}
 		ownerid = bldgCode + wing + flatNumber;
 		if (ownerid.length() <= 10) {
 			partyCode = bldgCode + wing + flatNumber + " " + String.valueOf(ownerIdCount);
 			minor = bldgCode + wing + chargeCode + flatNumber + " " + String.valueOf(ownerIdCount);
-		}else {
+		} else {
 			partyCode = bldgCode + wing + flatNumber + String.valueOf(ownerIdCount);
 			minor = bldgCode + wing + chargeCode + flatNumber + String.valueOf(ownerIdCount);
 		}
@@ -96,30 +106,34 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 		return partyCodeMinorMap;
 	}
 
-
 	@Override
-	public String saveIncheqe(String bldgCode, String wing, String flatNumber, String chargeCode, InchequeRequest inchequeRequest) {
+	public InchequeResponse saveIncheqe(String bldgCode, String wing, String flatNumber, String chargeCode,String siteName,String userId,
+			InchequeRequest inchequeRequest) {
 		log.debug("inchequeRequest: {}", inchequeRequest);
+		InchequeResponse inchequeResponse = InchequeResponse.builder().build();
 		
-		double totalReceiptAmt = Double.parseDouble(inchequeRequest.getChequeAmount());
-        String ownerId = "";
-        String chequeNo = inchequeRequest.getChequeNumber(); 
-        String inchqMode = "C";
-		
+		String result = Result.FAILED;
+		String message = ApiResponseMessage.INCHEQ_DETAIL_FAILED_TO_SAVE ;
+		String responseCode = ApiResponseCode.FAILED;
+		String ownerId = "";
+		String chequeNo = "";
+		double totalReceiptAmt = 0.00;
+		String inchqMode = "C";
+
 		Map<String, String> partyCodeAndMinor = getPartyCodeAndMinor(bldgCode, wing, flatNumber, chargeCode);
 		String partyCode = partyCodeAndMinor.get("partyCode");
 		String minor = partyCodeAndMinor.get("minor");
 		log.debug("partyCode : {} minor: {}", partyCode, minor);
-		
+
 		AuxiBuildingDBResponse buildingDBResponse = buildingRepository.findBuildingByCode(bldgCode);
 		log.debug("buildingDBResponse : {} ", buildingDBResponse);
 //		GlchartDBResponse glchartDBResponse = glchartRepository.fetchChartCfrecgroup("11401233");
 		GlchartDBResponse glchartDBResponse = new GlchartDBResponse();
 		log.debug("glchartDBResponse : {}", glchartDBResponse);
-		
+
 		String rgroupc = String.format("%1$6s", glchartDBResponse.getChartRgroupc());
 		String cfrecgroup = glchartDBResponse.getChartCfrecgroup();
-		
+
 		if (rgroupc.length() > 6) {
 			rgroupc = rgroupc.substring(rgroupc.length() - 6);
 		}
@@ -129,28 +143,6 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 		if (cfrecgroup.equals("XXXXXX")) {
 			cfrecgroup = "";
 		}
-		List<GridResponse> gridRequest = new ArrayList<>();
-		gridRequest.add(GridResponse.builder().monthName("202306").build());
-		gridRequest.add(GridResponse.builder().monthName("202308").build());
-		int last = gridRequest.size()-1;
-		GridResponse firsGridObject = gridRequest.get(0);
-		GridResponse lastGridObject = gridRequest.get(last);
-		
-		String year = firsGridObject.getMonthName().substring(4,6);
-		String month = firsGridObject.getMonthName().substring(0,4);
-		String startFrom = "01/"+month+"/"+year;
-		
-		year = lastGridObject.getMonthName().substring(4,6);
-		month = lastGridObject.getMonthName().substring(0,4);
-		
-		 // Create a Calendar instance
-        Calendar calendar = Calendar.getInstance();
-        // Set the calendar date to the last day of the specified month and year
-        calendar.set(Integer.parseInt(year), Integer.parseInt(month) - 1, 1);
-        int lastDay = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
-        String endTill = lastDay + "/" + month + "/" + year;
-
-        
 //        if (adjAmt == totalReceiptAmt) {
 //        	 AuxiBuildingDBResponse auxiBuildingDBResponse = buildingRepository.findBuildingByCode(bldgCode);
 //        	 log.debug("auxiBuildingDBResponse : {}", auxiBuildingDBResponse);
@@ -163,59 +155,143 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 //			String coyProp = companyRepository.findCoyPropByCodeAndClosedate(auxiBuildingDBResponse.getBldgMaintcoy());
 //    		log.debug("coyProp : {}", coyProp);
 //		}
-        
-        if (wing.equals("")) {
-        	ownerId = bldgCode + " " + flatNumber;
+		String outInfraPersistResult = this.saveOutInfra(inchequeRequest.getGridRequest(),userId, siteName, bldgCode, wing, flatNumber, chargeCode, inchequeRequest.getReceiptDate());
+		log.debug("out infra persist result: {}", outInfraPersistResult);
+
+		List<ChequeRequest> cheques = inchequeRequest.getCheques();
+		
+		List<InchequeDetailResponse> chequeResponse = new ArrayList<>();
+	
+		if (wing.equals("")) {
+			ownerId = bldgCode + " " + flatNumber;
 			wing = " ";
-		}else {
+		} else {
 			ownerId = bldgCode + wing + flatNumber;
 		}
-        if (chequeNo.equals("")) {
-			inchqMode = "Q";
-		}else {
-			inchqMode = "C";
-		}
-        
-        LocalDateTime inchqDate = LocalDateTime.parse(inchequeRequest.getChequeDate(), DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-       log.debug("inchqDate : {}", inchqDate);
+		try {
+			for (ChequeRequest chequeRequest : cheques) {
+				
+				chequeNo = chequeRequest.getChequeNumber();
+				totalReceiptAmt = Double.parseDouble(chequeRequest.getChequeAmount());
+			
+				if (chequeNo.equals("")) {
+					inchqMode = "Q";
+				} else {
+					inchqMode = "C";
+				}
+				InchqCK ck = InchqCK.builder().inchqNum(chequeRequest.getChequeNumber()) // 1
+						.inchqBank(chequeRequest.getBank()) // 4
+//             		.inchqCoy("SOGR")
+//             		.inchqRecnum("")
+						.build();
 
-        InchqCK ck = InchqCK.builder()
-        		.inchqNum(inchequeRequest.getChequeNumber()) //1
-        		.inchqBank(inchequeRequest.getBank()) //4
-//        		.inchqCoy("SOGR")
-//        		.inchqRecnum("")
-        		.build();
-        
-        Inchq inchqEntity = Inchq.builder()
-        		.inchqCk(ck)
-        		.inchqPaymode(inchqMode) //0
-        		.inchqAmount(totalReceiptAmt) //2
-        		.inchqDate(inchqDate) //3
-        		.inchqOutstat(inchequeRequest.getOutstat()) //5
-//        		.inchqResubcount(0.00)
-//        		.inchqRemark(null)
-        		.inchqProprietor(buildingDBResponse.getBldgProp())
-//        		.inchqOrigsys(partyCode)
-        		.inchqPartycode(partyCode)
-        		.inchqFund(inchequeRequest.getFundSource())
-        		.inchqActype(inchequeRequest.getAcType())
-//        		.inchqLoanyn("")
-        		.inchqSite(inchequeRequest.getSiteName())
-        		.inchqUserid(inchequeRequest.getUserId())
-        		.inchqToday(LocalDateTime.now())
-//        		.inchqOrigsite("")
-//        		.inchqCoybank("")
-        		.build();
-        
-        
-        String result = "Faild";
-        Inchq save = inchqRepository.save(inchqEntity);
-        if (!(save.getInchqCk().getInchqBank()).equals(null)) {
-        	result = "incheq detail save successfully.";
-		}else {
-			result = "incheq detail failed to save.";
+				Inchq inchqEntity = Inchq.builder().inchqCk(ck).inchqPaymode(inchqMode) // 0
+						.inchqAmount(totalReceiptAmt) // 2
+						.inchqDate(chequeRequest.getChequeDate()) // 3 
+						.inchqOutstat(chequeRequest.getOutstat()) // 5
+//             		.inchqResubcount(0.00)
+//             		.inchqRemark(null)
+						.inchqProprietor(buildingDBResponse.getBldgProp())
+//             		.inchqOrigsys(partyCode)
+						.inchqPartycode(partyCode).inchqFund(chequeRequest.getFundSource())
+						.inchqActype(chequeRequest.getAcType())
+//             		.inchqLoanyn("")
+						.inchqSite(siteName)
+						.inchqUserid(userId)
+						.inchqToday(LocalDateTime.now())
+//             		.inchqOrigsite("")
+//             		.inchqCoybank("")
+						.build();
+
+				Inchq save = inchqRepository.save(inchqEntity);
+				InchequeDetailResponse inchequeDetailResponse = new InchequeDetailResponse();
+				if (!(save.getInchqCk().getInchqBank()).equals(null)) {
+					inchequeDetailResponse.setChequeNumber(save.getInchqCk().getInchqNum());
+					inchequeDetailResponse.setChequeAmount(save.getInchqAmount().toString());;
+					inchequeDetailResponse.setMessage("incheq detail save successfully.");
+					result = Result.SUCCESS;
+					responseCode = ApiResponseCode.SUCCESS;
+					message = "incheq detail save successfully.";
+				} else {
+					inchequeDetailResponse.setChequeNumber(save.getInchqCk().getInchqNum());
+					inchequeDetailResponse.setChequeAmount(save.getInchqAmount().toString());;
+					inchequeDetailResponse.setMessage("incheq detail failed to save.");
+				}
+				chequeResponse.add(inchequeDetailResponse);
+				
+			}
 		}
-		return result;
+		
+		catch (Exception exception) {
+			log.error("exception occured :{}", exception.getMessage());
+			throw new InternalServerError(exception.getMessage());
+		}
+		
+		return InchequeResponse.builder().result(result).message(message).responseCode(responseCode).chequeResponse(chequeResponse).build();
+	}
+
+	private String saveOutInfra(List<GridResponse> gridRequest, String userId, String siteName, String bldgCode,String wing,String flatNumber,String chargeCode,LocalDateTime receiptDate) {
+		String outInfraSaveResult = Result.FAILED;
+		
+		String ownerId = bldgCode + wing + flatNumber;
+		AuxiBuildingDBResponse buildingDBResponse = buildingRepository.findBuildingByCode(bldgCode);
+		if (flatNumber.length() == 5) {
+			flatNumber = flatNumber + " ";
+		}
+
+		if (wing.equals("")) {
+			wing = "";
+		}
+		if (wing.equals("")) {
+			ownerId = bldgCode + " " + flatNumber;
+			wing = " ";
+		} 
+		
+		for (GridResponse grid : gridRequest) {
+			OutinfraCK outinfraCK = OutinfraCK
+					.builder()
+					.infRecnum(ReceiptNumberGenerator.getReceiptNumber())
+					.infOwnerid(ownerId)
+					.infBldgcode(bldgCode)
+					.infMonth(grid.getMonthName())
+					.infNarrcode(grid.getNarrationCode())
+					.build();
+			
+			Outinfra outinfra = Outinfra.builder()
+			.outinfraCK(outinfraCK)
+			.infWing(wing)
+			.infFlatnum(flatNumber)
+			.infCoy(buildingDBResponse.getBldgCoy())
+			.infAmtdue(0.00)
+			.infAmtpaid(grid.getAuxiPaid())
+			.infAmtos(0.00)
+			.infAmtint(grid.getIntPaid())
+			.infOrigint(0.00)
+			.infChargecode(chargeCode)
+			.infRecdate(receiptDate.toLocalDate())
+//			.infRecprintyn("N")
+			.infCancelledyn("N")
+			.infRemarks(grid.getNarration())
+			.infSite(siteName)  
+			.infUserid(userId)
+			.infToday(LocalDateTime.now())
+			.infOrigsite(siteName)
+			.infGstyn("Y")
+			.infRectype("N")
+			.infCgst(grid.getCgst())
+			.infSgst(grid.getSgst())
+			.infIgst(grid.getIgst())
+			.infCgstperc(grid.getCgstPercent())
+			.infSgstperc(grid.getSgstPercent())
+			.infIgstperc(grid.getIgstPercent())
+			.build();
+			
+			Outinfra saveOutinfra = outinfraRepository.save(outinfra);
+			if (Objects.nonNull(saveOutinfra)) {
+				outInfraSaveResult = Result.SUCCESS;
+			}
+		}
+		return outInfraSaveResult;
 	}
 
 }
