@@ -32,9 +32,9 @@ public interface ActranhRepository extends JpaRepository<Actranh, ActranhCK> {
 	@Query("Select a from Actranh a where trim(a.actranhCK.acthTranser) = :ser")
 	public Actranh findByActranhCK_ActhTranser(String ser);
 	
-	public Actranh findByActranhCK_ActhTranserAndActranhCK_ActhCoy(String ser, String trim);
+	Actranh findByActranhCK_ActhTranserAndActranhCK_ActhCoy(String transer, String coy);
 	
-	@Query("Select a.acthReverseyn From Actranh a where trim(a.actranhCK.acthTranser) = :transer and trim(a.actranhCK.acthCoy) = :coy")
+	@Query("Select a.acthReverseyn From Actranh a where trim(a.actranhCK.acthTranser)= :transer and trim(a.actranhCK.acthCoy)= :coy")
 	String findActranhReversedYNByTranserAndCoy(String transer, String coy);
 	
 	@Query("Select a.acthReverseyn From Actranh a where trim(a.actranhCK.acthTranser) = :transer")
@@ -42,4 +42,7 @@ public interface ActranhRepository extends JpaRepository<Actranh, ActranhCK> {
 	
 	@Query("Select to_char(max(a.acthTrandate),'dd/mm/yyyy') from Actranh a where trim(a.actranhCK.acthTranser) in (:transerNos)")
 	String findMaxranDateByTranserNos(List<String> transerNos);
+	
+	@Query("select a from Actranh a where a.actranhCK.acthTranser= :transer")
+	Actranh fetchActranh(String transer);
 }

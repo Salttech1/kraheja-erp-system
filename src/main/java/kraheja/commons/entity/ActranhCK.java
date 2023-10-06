@@ -22,11 +22,11 @@ public class ActranhCK implements Serializable{
 	private static final long serialVersionUID = 1L;
 	
 	@Column
-	@Type(type = "kraheja.commons.utils.CharType")
+//	@Type(type = "kraheja.commons.utils.CharType")
 	private String acthTranser;
 	
 	@Column
-	@Type(type = "kraheja.commons.utils.CharType")
+//	@Type(type = "kraheja.commons.utils.CharType")
 	private String acthCoy;
 
 }

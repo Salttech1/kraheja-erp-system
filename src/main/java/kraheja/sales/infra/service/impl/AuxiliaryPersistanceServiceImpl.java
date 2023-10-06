@@ -7,16 +7,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import javax.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import kraheja.arch.projbldg.dataentry.repository.BuildingRepository;
+import kraheja.commons.entity.Actranh;
+import kraheja.commons.entity.ActranhCK;
+import kraheja.commons.entity.Actranhx;
+import kraheja.commons.entity.ActranhxCK;
 import kraheja.commons.entity.Inchq;
 import kraheja.commons.entity.InchqCK;
+import kraheja.commons.repository.ActranhRepository;
+import kraheja.commons.repository.ActranhxRepository;
 import kraheja.commons.repository.CompanyRepository;
 import kraheja.commons.repository.GlchartRepository;
 import kraheja.commons.repository.InchqRepository;
 import kraheja.commons.repository.PartyRepository;
+import kraheja.commons.utils.GenericAccountingLogic;
 import kraheja.constant.ApiResponseCode;
 import kraheja.constant.ApiResponseMessage;
 import kraheja.constant.Result;
@@ -31,7 +40,7 @@ import kraheja.sales.bean.response.InchequeResponse;
 import kraheja.sales.entity.Outinfra;
 import kraheja.sales.entity.OutinfraCK;
 import kraheja.sales.infra.service.AuxiliaryPersistanceService;
-import kraheja.sales.infra.utilities.ReceiptNumberGenerator;
+import kraheja.sales.infra.utilities.NumberGenerator;
 import kraheja.sales.repository.OutinfraRepository;
 import lombok.extern.log4j.Log4j2;
 
@@ -46,6 +55,7 @@ import lombok.extern.log4j.Log4j2;
  */
 @Log4j2
 @Service
+@Transactional
 public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceService {
 
 	@Autowired
@@ -61,6 +71,17 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 	
 	@Autowired
 	private OutinfraRepository outinfraRepository;
+	
+	@Autowired
+	private ActranhRepository actranhRepository;
+	
+	
+	@Autowired
+	private GenericAccountingLogic genericAccountingLogic;
+	
+	@Autowired
+	private ActranhxRepository actranhxRepository;
+	
 
 	/**
 	 * <p>
@@ -110,8 +131,6 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 	public InchequeResponse saveIncheqe(String bldgCode, String wing, String flatNumber, String chargeCode,String siteName,String userId,
 			InchequeRequest inchequeRequest) {
 		log.debug("inchequeRequest: {}", inchequeRequest);
-		InchequeResponse inchequeResponse = InchequeResponse.builder().build();
-		
 		String result = Result.FAILED;
 		String message = ApiResponseMessage.INCHEQ_DETAIL_FAILED_TO_SAVE ;
 		String responseCode = ApiResponseCode.FAILED;
@@ -157,7 +176,36 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 //		}
 		String outInfraPersistResult = this.saveOutInfra(inchequeRequest.getGridRequest(),userId, siteName, bldgCode, wing, flatNumber, chargeCode, inchequeRequest.getReceiptDate());
 		log.debug("out infra persist result: {}", outInfraPersistResult);
+		
+/*
+ * this method is use for insert int actranh table
+ */
+		ActranhCK actranhCk = ActranhCK.builder().acthTranser(NumberGenerator.getTranser()).acthCoy(buildingDBResponse.getBldgCoy()).build();
+		Actranh actranh = Actranh.builder()
+				.actranhCK(actranhCk)
+				.acthTrantype("RC")
+				.acthTrandate(LocalDateTime.now())
+				.acthLedgcode("")
+				.acthPartytype("F")
+				.acthPartycode(partyCode)
+				.acthTranamt(totalReceiptAmt)
+				.acthProprietor(buildingDBResponse.getBldgProp())
+				.acthVounum(NumberGenerator.getReceiptNumber())
+				.acthVoudate(LocalDateTime.now().toLocalDate())
+				.acthPostedyn("N")
+				.acthSite(siteName)
+				.acthUserid(userId)
+				.acthToday(LocalDateTime.now())
+				.acthClearacyn("N")
+				.acthReverseyn("N")
+				.acthProvyn("N")
+				.build();
+		
+		String updateActranhResult = this.updateActranh(actranh);
+		log.debug("actranh persistance result: {}", updateActranhResult);
 
+		
+		
 		List<ChequeRequest> cheques = inchequeRequest.getCheques();
 		
 		List<InchequeDetailResponse> chequeResponse = new ArrayList<>();
@@ -230,6 +278,39 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 		return InchequeResponse.builder().result(result).message(message).responseCode(responseCode).chequeResponse(chequeResponse).build();
 	}
 
+	
+
+
+
+	private String updateActranh(Actranh actranh) {
+		Actranh hasRecord = actranhRepository.fetchActranh(actranh.getActranhCK().getActhTranser());
+		log.debug("actranh has already recorded: {}", hasRecord);
+		if (Objects.nonNull(hasRecord)) {
+			ActranhxCK actranhxCK = ActranhxCK.builder().acthCoy(actranh.getActranhCK().getActhCoy()).acthRevision(actranh.getActhReverseyn()).acthToday(LocalDateTime.now()).acthTranser(actranh.getActranhCK().getActhTranser()).build();
+			Actranhx actranhx = Actranhx.builder()
+			.actranhxCK(actranhxCK)
+			.acthTrantype(actranh.getActhTrantype())
+			.acthTrandate(actranh.getActhTrandate().toLocalDate())
+			.acthPartytype(actranh.getActhPartytype())
+			.acthPartycode(actranh.getActhPartycode())
+			.acthTranamt(actranh.getActhTranamt())
+			.acthProprietor(actranh.getActhProprietor())
+			.acthVounum(actranh.getActhVounum())
+			.acthVoudate(actranh.getActhVoudate())
+			.acthPostedyn(actranh.getActhPostedyn())
+			.acthSite(actranh.getActhSite())
+			.acthUserid(actranh.getActhUserid())
+			.build();
+			Actranhx save = actranhxRepository.save(actranhx);
+			log.debug("actranhx data obtaint: {}", save);
+		}
+		Actranh save = actranhRepository.save(actranh);
+		if (Objects.nonNull(save)) {
+			return Result.SUCCESS;
+		}
+		return Result.FAILED;
+	}
+
 	private String saveOutInfra(List<GridResponse> gridRequest, String userId, String siteName, String bldgCode,String wing,String flatNumber,String chargeCode,LocalDateTime receiptDate) {
 		String outInfraSaveResult = Result.FAILED;
 		
@@ -250,7 +331,7 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 		for (GridResponse grid : gridRequest) {
 			OutinfraCK outinfraCK = OutinfraCK
 					.builder()
-					.infRecnum(ReceiptNumberGenerator.getReceiptNumber())
+					.infRecnum(NumberGenerator.getReceiptNumber())
 					.infOwnerid(ownerId)
 					.infBldgcode(bldgCode)
 					.infMonth(grid.getMonthName())
@@ -286,12 +367,15 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 			.infIgstperc(grid.getIgstPercent())
 			.build();
 			
-			Outinfra saveOutinfra = outinfraRepository.save(outinfra);
+//			Outinfra saveOutinfra = outinfraRepository.save(outinfra);
+			Outinfra saveOutinfra = new Outinfra();
+			
 			if (Objects.nonNull(saveOutinfra)) {
 				outInfraSaveResult = Result.SUCCESS;
 			}
 		}
 		return outInfraSaveResult;
 	}
-
+	
+	
 }
