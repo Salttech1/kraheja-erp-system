@@ -17,5 +17,6 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @SuperBuilder
 public class InchequeResponse extends GenericResponse{
+	private String receptNumber;
 	private List<InchequeDetailResponse> chequeResponse;
 }

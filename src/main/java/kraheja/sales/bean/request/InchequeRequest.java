@@ -19,6 +19,11 @@ import lombok.ToString;
 @AllArgsConstructor
 @ToString
 public class InchequeRequest {
+	private double cgstAmt;
+	private double sgstAmt;
+	private double igstAmt;
+	private double tdsAmt;
+	private double transactionAmt;
 	private LocalDateTime receiptDate;
 	private List<ChequeRequest> cheques;
 	private List<GridResponse> gridRequest;

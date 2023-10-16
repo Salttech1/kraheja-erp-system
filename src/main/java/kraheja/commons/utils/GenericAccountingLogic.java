@@ -42,6 +42,7 @@ import kraheja.commons.repository.ActranhxRepository;
 import kraheja.commons.repository.CompanyRepository;
 import kraheja.commons.repository.EntityRepository;
 import kraheja.commons.repository.GlchartRepository;
+import kraheja.sales.bean.entitiesresponse.GlchartEntityResponse;
 
 @Component
 public class GenericAccountingLogic {
@@ -202,16 +203,17 @@ public class GenericAccountingLogic {
 		String strLocValidminyn, strLocValidminor, strLocPostProjOnly, strLocPostGLOnly;
 		Integer intLocTotMinor, intLocFoundRow, intLocTotParties;
 
-		String glchartEntity = glchartRepository.findchartMinorAndchartPostByCharAcnum(strPrmACMajor);
+		GlchartEntityResponse glchartEntity = glchartRepository.findchartMinorAndchartPostByCharAcnum(strPrmACMajor);
+		
 		LOGGER.info("test :: {} ",glchartEntity);
 
-		String[] commaSepratedValuesFromGlchart = glchartEntity.split(CommonConstraints.INSTANCE.COMMA_STRING);
-		LOGGER.info("EntityArray :: {}" + commaSepratedValuesFromGlchart);
+//		String[] commaSepratedValuesFromGlchart = glchartEntity.split(CommonConstraints.INSTANCE.COMMA_STRING);
+//		LOGGER.info("EntityArray :: {}" + commaSepratedValuesFromGlchart);
 
-		strLocValidminyn = !commaSepratedValuesFromGlchart[0].equals(" ") ? commaSepratedValuesFromGlchart[0] : null;
-		strLocValidminor = !commaSepratedValuesFromGlchart[1].equals(" ") ? commaSepratedValuesFromGlchart[1] : null;
-		strLocPostProjOnly = !commaSepratedValuesFromGlchart[2].equals(" ") ? commaSepratedValuesFromGlchart[2] : null;
-		strLocPostGLOnly = !commaSepratedValuesFromGlchart[3].equals(" ") ? commaSepratedValuesFromGlchart[3] : null;
+		strLocValidminyn = !glchartEntity.getChartMinoryn().equals("") ? glchartEntity.getChartMinoryn() : null;
+		strLocValidminor = !glchartEntity.getChartPostglonly().equals("") ? glchartEntity.getChartPostglonly() : null;
+		strLocPostProjOnly = !glchartEntity.getChartPostprojonly().equals("") ? glchartEntity.getChartPostprojonly() : null;
+		strLocPostGLOnly = !glchartEntity.getChartValidminors().equals("") ? glchartEntity.getChartValidminors() : null;
 
 		String partyTypeFromValidPartyView = "SELECT vpar_partytype FROM v_validparty WHERE  vpar_acmajor = '".concat(strPrmACMajor).concat("' AND vpar_partytype = '").concat(strPrmPartyType).concat("'");
 		List<Map<String,Object>> validPartyMapList = CommonResultsetGenerator.queryToResultSetBuilder(partyTypeFromValidPartyView);
@@ -459,7 +461,7 @@ public class GenericAccountingLogic {
 					.build();
 	}
 
-	public static List<ActrandBean>  InitialiseActrandBreakups(String tranType, String acMajor, String minType, String minCode, String partyType, String partyCode, String project, String acMinor, 
+	public static List<ActrandBean>  initialiseActrandBreakups(String tranType, String acMajor, String minType, String minCode, String partyType, String partyCode, String project, String acMinor, 
 			String xAcMajor, String xMinType, String xPartyType, String xPartyCode, String xProject, String xAcMinor, Double tranAmt, 
 			String bldgCode, String property,String uom, String tranDate,Integer bunumCounter, String narrationMsg, String transer, String ledgCode,
 			String prop, String coy, String vouNum, String vouDate, String period, String domain, String matgroup, String matcode, Double itemqty, String docnum, String docdate,

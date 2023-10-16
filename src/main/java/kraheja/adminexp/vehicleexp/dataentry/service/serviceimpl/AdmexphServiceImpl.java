@@ -1,6 +1,7 @@
 package kraheja.adminexp.vehicleexp.dataentry.service.serviceimpl;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -713,6 +714,11 @@ public class AdmexphServiceImpl implements AdmexphService {
 				}else {
 					billamount = admexpdlist.getAdmdBillamount() + admexpdlist.getAdmdCgst() + admexpdlist.getAdmdSgst() + admexpdlist.getAdmdIgst()+ admexpdlist.getAdmdUgst();
 				}
+				//following code has be done for billamount = 12.4565652239 issue
+				//SELECT actd_acmajor, actd_bunum, sum(actd_tranamt) FROM actrand WHERE actd_transer = 'P000812677' group by actd_acmajor, actd_bunum ;
+				//In bove select was given 12.4565652239 issue
+				BigDecimal bd = new BigDecimal(billamount).setScale(2, RoundingMode.HALF_UP);  
+				billamount = bd.doubleValue();
 				
 				String mintype = " ";
 				String mincode = ""; 

@@ -1,5 +1,7 @@
 package kraheja.sales.infra.utilities;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 /**
@@ -10,7 +12,7 @@ import java.time.format.DateTimeFormatter;
  * @since 27 SEP 2023
  * @version 1.0.0
  * */
-public class EndMonthGenerator {
+public class DateUtill {
 
 	// 202306+5
 	public static String endMonth(int countMonth) {
@@ -27,4 +29,17 @@ public class EndMonthGenerator {
 	        }
 		return String.valueOf(countMonth); // 202311
 	}
+	
+	 public static String dateFormatter(LocalDateTime date) {
+
+	        // Define a DateTimeFormatter for the desired format
+	        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+	        // Format the date and time
+	        String formattedDate = date.format(formatter);
+
+	        System.out.println(formattedDate);
+			return formattedDate;
+	    }
+	
 }

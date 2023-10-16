@@ -20,7 +20,7 @@ import kraheja.sales.bean.request.AuxilaryRequest;
 import kraheja.sales.bean.response.AuxilaryResponse;
 import kraheja.sales.bean.response.GridResponse;
 import kraheja.sales.infra.service.AuxilaryService;
-import kraheja.sales.infra.utilities.EndMonthGenerator;
+import kraheja.sales.infra.utilities.DateUtill;
 import kraheja.sales.repository.OutinfraRepository;
 import kraheja.sales.repository.OutrateRepository;
 
@@ -66,7 +66,7 @@ public class AuxilaryServiceImpl implements AuxilaryService {
 			log.debug("respone : {}", respone);
 			
 			String totalMonthCount = String.valueOf(respone.size());
-			String endMonth = EndMonthGenerator.endMonth((respone.size()-1) + Integer.parseInt(strStartDate));
+			String endMonth = DateUtill.endMonth((respone.size()-1) + Integer.parseInt(strStartDate));
 			
 			return AuxilaryResponse.builder().result("success").responseCode("00").message("successfully fetch.")
 					.startMonth(strStartDate).endMonth(endMonth).totalMonth(totalMonthCount)

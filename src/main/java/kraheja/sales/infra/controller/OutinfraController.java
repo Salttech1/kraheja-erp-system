@@ -1,7 +1,6 @@
 package kraheja.sales.infra.controller;
 
 import java.text.ParseException;
-import java.util.List;
 
 import javax.validation.Valid;
 
@@ -16,12 +15,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import kraheja.payroll.GenericResponse;
 import kraheja.sales.bean.request.AuxilaryRequest;
 import kraheja.sales.bean.request.InchequeRequest;
 import kraheja.sales.bean.request.OutinfraRequestBean;
 import kraheja.sales.bean.response.AuxilaryResponse;
-import kraheja.sales.bean.response.GridResponse;
 import kraheja.sales.bean.response.InchequeResponse;
 import kraheja.sales.infra.service.AuxilaryService;
 import kraheja.sales.infra.service.AuxiliaryPersistanceService;
@@ -141,13 +138,11 @@ public class OutinfraController {
 			@RequestParam String wing,
 			@RequestParam String flatNumber, 
 			@RequestParam String chargeCode,
-			@RequestParam String siteName, 
-			@RequestParam String userId,
 			@RequestBody InchequeRequest inchequeRequest){
 		
 		log.debug("post/request/outinfra/saveIncheqe buildingCode : {} wing:{} flatNumber: {} chargeCode: {} inchequeRequest: {}", buildingCode, wing, flatNumber, chargeCode, inchequeRequest);
 		
-		InchequeResponse response = auxiPersistanceService.saveIncheqe(buildingCode, wing, flatNumber, chargeCode,siteName,userId, inchequeRequest);
+		InchequeResponse response = auxiPersistanceService.saveIncheqe(buildingCode, wing, flatNumber, chargeCode, inchequeRequest);
 		log.debug("post/response/saveIncheqe : {}",response);
 		
 		return ResponseEntity.ok(response);
