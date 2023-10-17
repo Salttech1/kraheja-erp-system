@@ -32,10 +32,9 @@ public class OutinfraController {
 
 	@Autowired
 	private OutinfraService outinfraService;
-	@Autowired 
-	private AuxilaryService auxilaryService;
 	
-	@Autowired private AuxiliaryPersistanceService auxiPersistanceService;
+	@Autowired AuxiliaryPersistanceService auxiPersistanceService;
+	@Autowired AuxilaryService auxilaryService;
 	
 	//following function will fetch data of flatowner. 
 	
@@ -122,6 +121,7 @@ public class OutinfraController {
 		return this.outinfraService.deleteOutinfra(bldgcode, ownerid, recnum, month, narrcode) ; 
 	}
 	
+	
 	@PostMapping("/auxilary-allocation-grid")
 	public ResponseEntity<AuxilaryResponse> gridData(@RequestBody AuxilaryRequest request){
 		log.debug("post/request/outinfra/auxilary-fill-grid request : {}", request);
@@ -147,4 +147,5 @@ public class OutinfraController {
 		
 		return ResponseEntity.ok(response);
 	}
+	
 }

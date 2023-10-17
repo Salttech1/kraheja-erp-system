@@ -30,4 +30,5 @@ public class EmpsalarypackageEarnDedBean {
 	private LocalDateTime modifiedon ;
 	private String ipaddress ;
 	private Character state;
+	private Character active;
 }

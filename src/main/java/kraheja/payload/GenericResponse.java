@@ -1,4 +1,4 @@
-package kraheja.payroll;
+package kraheja.payload;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

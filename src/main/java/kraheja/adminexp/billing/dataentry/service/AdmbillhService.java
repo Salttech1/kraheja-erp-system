@@ -17,4 +17,6 @@ public interface AdmbillhService {
 
 	ResponseEntity<?> checkserExists(String ser);
 
+	ResponseEntity<?> fetchAdvancePaidDetail(String partyCode, String buildingCode, String coy, Double advanceAdjust, String tranMode);
+
 }

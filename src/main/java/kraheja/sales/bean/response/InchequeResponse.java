@@ -2,7 +2,7 @@ package kraheja.sales.bean.response;
 
 import java.util.List;
 
-import kraheja.payroll.GenericResponse;
+import kraheja.payload.GenericResponse;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

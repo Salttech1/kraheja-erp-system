@@ -9,6 +9,7 @@ import javax.persistence.Entity;
 import javax.persistence.Index;
 import javax.persistence.Table;
 
+import kraheja.purch.entity.Pbillh;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

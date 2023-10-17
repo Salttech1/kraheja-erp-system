@@ -42,4 +42,6 @@ public class EmployeeDetailsResponseBean {
 	private AddressResponseBean addressmail;
 	private AddressResponseBean addressres;
 	private byte[] EmpPhoto;
+	List MTHLYGROSS;
+	List CTC;
 }

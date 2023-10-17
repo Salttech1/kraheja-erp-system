@@ -10,6 +10,8 @@ import kraheja.adminexp.billing.dataentry.entity.AdmbilldCK;
 public interface AdmbilldRepository extends JpaRepository<Admbilld, AdmbilldCK> {
 
 	 
-	List<Admbilld> findByAdmbilldCK_AdbldSer(String ser) ; 
+	List<Admbilld> findByAdmbilldCK_AdbldSer(String ser) ;
+
+	
 
 }

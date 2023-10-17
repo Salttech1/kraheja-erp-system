@@ -17,6 +17,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.Tuple;
@@ -32,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -71,6 +73,7 @@ import kraheja.commons.utils.GenericAccountingLogic;
 import kraheja.commons.utils.GenericCounterIncrementLogicUtil;
 import kraheja.commons.utils.ValueContainer;
 import kraheja.sales.infra.service.InfraService;
+import kraheja.sales.repository.OutinfraRepository;
 import kraheja.sales.bean.request.InfraDefaultersListRequestBean;
 
 @Service
@@ -107,6 +110,9 @@ public class InfraServiceImpl implements InfraService {
 	@Autowired
 	private  BuildingRepository buildingRepository;
 
+	@Autowired
+	private OutinfraRepository outinfraRepository;
+	
 	@Autowired
 	private EntityRepository entityRepository;
 
@@ -223,4 +229,51 @@ public class InfraServiceImpl implements InfraService {
 
 		return ResponseEntity.ok(ServiceResponseBean.builder().status(Boolean.TRUE).build());
 	}
+	
+//	@Override
+//	public ResponseEntity<?> getGstFlag( String recNum) {
+//
+//	    try {
+//	        String gstFlag = this.outinfraRepository.findByOutinfraCK_InfRecNum(recNum);
+//	        if (gstFlag != null) {
+//	            return ResponseEntity.ok(ServiceResponseBean.builder().status(Boolean.TRUE).data(gstFlag).message("Data received successfully"));
+//	        } else {
+//	            return ResponseEntity.ok(ServiceResponseBean.builder().status(Boolean.FALSE).message("Data retrieval failure."));
+//	        }
+//	    } catch (NoResultException e) {
+//	        return ResponseEntity.ok(ServiceResponseBean.builder().status(Boolean.FALSE).message("No data found for the given recNum."));
+//	    }
+//	}
+	@Override
+public ResponseEntity<?> fetchGstFlag(String  recNum) {
+		LOGGER.info("recNum: {} ", recNum );
+
+		String gstYN = this.outinfraRepository.findByOutinfraCK_InfRecNum(recNum);	
+	LOGGER.info("gstYN: {} ", gstYN );
+	if(Objects.nonNull(gstYN) && !gstYN.isEmpty()) {
+		return ResponseEntity.ok(ServiceResponseBean.builder().status(Boolean.TRUE).data(gstYN).build());
+
+	}
+	return ResponseEntity.ok(ServiceResponseBean.builder().status(Boolean.FALSE).message("GST YN Not Found").build()); 
 }
+
+	@Override
+	public ResponseEntity<?>  fetchCarParks(String bldgCode , String wing, String flatNo) {
+		LOGGER.info("bldgCode: {} ", bldgCode );
+		LOGGER.info("wing: {} ", wing );
+		LOGGER.info("flatNo: {} ", flatNo );
+		String carParks = "";
+		Query query;
+		query = this.entityManager.createNativeQuery("select nvl(FLATPARKINGSROWTOCOL('"
+				+ bldgCode + "','" + wing + "','" + flatNo + "'),'.') FROM DUAL");
+
+		carParks = String.valueOf(query.getSingleResult());
+		LOGGER.info("carParks: {} ", carParks );
+		if(Objects.nonNull(carParks) && !carParks.isEmpty()) {
+			return ResponseEntity.ok(ServiceResponseBean.builder().status(Boolean.TRUE).data(carParks).build());
+
+		}
+		return ResponseEntity.ok(ServiceResponseBean.builder().status(Boolean.FALSE).message("Car Parkings Not Found").build()); 
+	}
+}
+

@@ -27,5 +27,9 @@ public class MasterDetailController {
 		return this.employeeDetailsEntryEditService.fetchEmplDetails(empcode) ;
 	}
 	
+	@GetMapping("/salarypackageDetail")
+	public ResponseEntity<?> fetchAllSalaryPackage(String empcode,Character currentAll) throws Exception{
+		return this.employeeDetailsEntryEditService.fetchAllSalaryPackage(empcode,currentAll) ;
+	}
 	
 }	

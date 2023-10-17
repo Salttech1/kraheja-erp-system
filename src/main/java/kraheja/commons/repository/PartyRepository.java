@@ -1,5 +1,6 @@
 package kraheja.commons.repository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -8,7 +9,6 @@ import javax.persistence.Tuple;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import kraheja.commons.entity.Party;
@@ -32,6 +32,9 @@ public interface PartyRepository extends JpaRepository<Party, PartyCK>, CrudRepo
             "AND (Upper(e.parPartyname) like '%LTD%' or upper(e.parPartyname) like '%LIMITED%' )")
 	Party findLimitedPartyByCode(String partycode, String partytype);
 	
+	@Query("Select e FROM Party e WHERE trim(e.partyCk.parPartycode) = :partyCode AND  e.partyCk.parPartytype =:partyType AND e.parOpendate<=:billDate AND (e.partyCk.parClosedate >= :billDate or e.partyCk.parClosedate is null) ")
+	Party findByPartyCodeAndParPartytypeAndBillDate(String partyCode, String partyType , LocalDate billDate);
+
 	@Query("select max(p.partyCk.parPartycode) from Party p where trim(p.partyCk.parPartycode) LIKE :partyCode and p.partyCk.parPartytype =:partyType")
-	String getPartyCode(@Param("partyCode") String partyCode, @Param("partyType") String partyType);
+	String getPartyCode(String partyCode,String partyType);
 }

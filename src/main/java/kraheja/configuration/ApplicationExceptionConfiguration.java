@@ -28,7 +28,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import kraheja.constant.ApiResponseCode;
 import kraheja.constant.ApiResponseMessage;
 import kraheja.constant.Result;
-import kraheja.payroll.GenericResponse;
+import kraheja.payload.GenericResponse;
 import lombok.extern.log4j.Log4j2;
 
 /**

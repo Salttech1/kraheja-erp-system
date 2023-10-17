@@ -28,4 +28,3 @@ public class GridResponse {
 	private double igstPercent;
 	private double tds;
 }
-
