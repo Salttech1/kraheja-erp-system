@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import javax.persistence.PersistenceException;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +37,7 @@ import kraheja.commons.utils.GenericCounterIncrementLogicUtil;
 import kraheja.constant.ApiResponseCode;
 import kraheja.constant.ApiResponseMessage;
 import kraheja.constant.Result;
+import kraheja.exception.ConstraintViolationException;
 import kraheja.exception.InternalServerError;
 import kraheja.sales.bean.entitiesresponse.AuxiBuildingDBResponse;
 import kraheja.sales.bean.entitiesresponse.GlchartDBResponse;
@@ -71,8 +73,6 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 	private BuildingRepository buildingRepository;
 	@Autowired
 	private GlchartRepository glchartRepository;
-	@Autowired
-	private CompanyRepository companyRepository;
 	@Autowired
 	private InchqRepository inchqRepository;
 
@@ -143,11 +143,8 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 		String chequeNo = "";
 		String siteName = GenericAuditContextHolder.getContext().getSite();
 		String userId = GenericAuditContextHolder.getContext().getUserid();
-		double cgstAmt = inchequeRequest.getCgstAmt();
-		double sgstAmt = inchequeRequest.getSgstAmt();
-		double igstAmt = inchequeRequest.getIgstAmt();
-		double tdsAmt = inchequeRequest.getTdsAmt();
-		double trnsAmt = inchequeRequest.getTransactionAmt();
+	
+		
 		String receiptNumber = GenericCounterIncrementLogicUtil.generateTranNoWithSite("#NSER", "#REC",siteName);
 		log.debug("receiptNumber: {}", receiptNumber);
 		
@@ -191,6 +188,8 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 		} else {
 			ownerId = bldgCode + wing + flatNumber;
 		}
+		log.debug("ownerId : {}", ownerId);
+
 		try {
 			for (ChequeRequest chequeRequest : cheques) {
 
@@ -225,7 +224,8 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 						.build();
 
 				Inchq save = inchqRepository.save(inchqEntity);
-//				Inchq save = new Inchq();
+				
+				
 				InchequeDetailResponse inchequeDetailResponse = new InchequeDetailResponse();
 				if (!(save.getInchqCk().getInchqBank()).equals(null)) {
 					inchequeDetailResponse.setChequeNumber(save.getInchqCk().getInchqNum());
@@ -243,12 +243,6 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 				chequeResponse.add(inchequeDetailResponse);
 
 			}
-		}
-
-		catch (Exception exception) {
-			log.error("exception occured :{}", exception.getMessage());
-			throw new InternalServerError(exception.getMessage());
-		}
 		
 		String outInfraPersistResult = this.saveOutInfra(inchequeRequest.getGridRequest(), userId, siteName, bldgCode,
 				wing, flatNumber, chargeCode, inchequeRequest.getReceiptDate(), receiptNumber);
@@ -260,7 +254,7 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 		ActranhCK actranhCk = ActranhCK.builder().acthTranser(receiptNumber)
 				.acthCoy(buildingDBResponse.getBldgCoy()).build();
 		Actranh actranh = Actranh.builder().actranhCK(actranhCk).acthTrantype("RC").acthTrandate(LocalDateTime.now())
-				.acthLedgcode("").acthPartytype("F").acthPartycode(partyCode).acthTranamt(trnsAmt)
+				.acthLedgcode("").acthPartytype("F").acthPartycode(partyCode).acthTranamt(inchequeRequest.getTransactionAmt())
 				.acthProprietor(buildingDBResponse.getBldgProp()).acthVounum(receiptNumber)
 				.acthVoudate(LocalDateTime.now().toLocalDate()).acthPostedyn("N").acthSite(siteName).acthUserid(userId)
 				.acthToday(LocalDateTime.now()).acthClearacyn("N").acthReverseyn("N").acthProvyn("N").build();
@@ -270,29 +264,29 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 
 		List<ActrandBean> actrandList = new ArrayList<>();
 		int bunum = 1;
-		if (cgstAmt >= 0) {
+		if (inchequeRequest.getCgstAmt() >= 0) {
 			actrandList.addAll(GenericAccountingLogic.initialiseActrandBreakups(
-					"RC", "80000006", "C", "AUXI", "F", partyCode,
+					"RC", "80000006", "C", chargeCode, "F", partyCode,
 					"GL", minor, "11401233", "", "", "", 
-					"GL", "", cgstAmt, bldgCode, "", "", DateUtill.dateFormatter(LocalDateTime.now()), bunum, "", actranh.getActranhCK().getActhTranser(), "PL",
+					"GL", "", inchequeRequest.getCgstAmt(), bldgCode, "", "", DateUtill.dateFormatter(LocalDateTime.now()), bunum, "", actranh.getActranhCK().getActhTranser(), "PL",
 					buildingDBResponse.getBldgProp(), buildingDBResponse.getBldgCoy(), "", DateUtill.dateFormatter(LocalDateTime.now()), "", "", "", "", 0.00, receiptNumber,
 					recieptDate, "", "F", partyCode));
 			bunum = bunum + 2;
 		}
-		if (sgstAmt >= 0) {
+		if (inchequeRequest.getSgstAmt() >= 0) {
 			actrandList.addAll(GenericAccountingLogic.initialiseActrandBreakups(
-					"RC", "80000006", "C", "AUXI", "F", partyCode,
+					"RC", "80000006", "C", chargeCode, "F", partyCode,
 					"GL", minor, "11401233", "", "", "", 
-					"GL", "", sgstAmt, bldgCode, "", "", DateUtill.dateFormatter(LocalDateTime.now()), bunum, "", actranh.getActranhCK().getActhTranser(), "PL",
+					"GL", "", inchequeRequest.getSgstAmt(), bldgCode, "", "", DateUtill.dateFormatter(LocalDateTime.now()), bunum, "", actranh.getActranhCK().getActhTranser(), "PL",
 					buildingDBResponse.getBldgProp(), buildingDBResponse.getBldgCoy(), "", DateUtill.dateFormatter(LocalDateTime.now()), "", "", "", "", 0.00, receiptNumber,
 					recieptDate, "", "F", partyCode));
 			bunum = bunum + 2;
 		}
-		if (tdsAmt >= 0) {
+		if (inchequeRequest.getTdsAmt() >= 0) {
 			actrandList.addAll(GenericAccountingLogic.initialiseActrandBreakups(
-					"RC", "80000006", "C", "AUXI", "F", partyCode,
+					"RC", "80000006", "C", chargeCode, "F", partyCode,
 					"GL", minor, "11401233", "", "", "", 
-					"GL", "", tdsAmt, bldgCode, "", "", DateUtill.dateFormatter(LocalDateTime.now()), bunum, "", actranh.getActranhCK().getActhTranser(), "PL",
+					"GL", "", inchequeRequest.getTdsAmt(), bldgCode, "", "", DateUtill.dateFormatter(LocalDateTime.now()), bunum, "", actranh.getActranhCK().getActhTranser(), "PL",
 					buildingDBResponse.getBldgProp(), buildingDBResponse.getBldgCoy(), "", DateUtill.dateFormatter(LocalDateTime.now()), "", "", "", "", 0.00, receiptNumber,
 					recieptDate, "", "F", partyCode));
 			bunum = bunum + 2;
@@ -300,9 +294,9 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 		log.debug("bunum#########################: {}", bunum);
 
 		actrandList.addAll(GenericAccountingLogic.initialiseActrandBreakups(
-				"RC", "80000006", "C", "AUXI", "F", partyCode,
+				"RC", "80000006", "C", chargeCode, "F", partyCode,
 				"GL", minor, "11401233", "", "", "", 
-				"GL", "", trnsAmt, bldgCode, "", "", DateUtill.dateFormatter(LocalDateTime.now()), bunum, "", actranh.getActranhCK().getActhTranser(), "PL",
+				"GL", "", inchequeRequest.getTransactionAmt(), bldgCode, "", "", DateUtill.dateFormatter(LocalDateTime.now()), bunum, "", actranh.getActranhCK().getActhTranser(), "PL",
 				buildingDBResponse.getBldgProp(), buildingDBResponse.getBldgCoy(), "", DateUtill.dateFormatter(LocalDateTime.now()), "", "", "", "", 0.00, receiptNumber,
 				recieptDate, "", "F", partyCode));
 				
@@ -312,6 +306,10 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 
 		return InchequeResponse.builder().result(result).message(message).responseCode(responseCode).receptNumber(receiptNumber)
 				.chequeResponse(chequeResponse).build();
+		}
+		catch (Exception pe) {
+		    throw new ConstraintViolationException(ApiResponseMessage.CHEQUE_ALREADY_IN_USED);
+		}
 	}
 
 	private String updateActranh(Actranh actranh) {

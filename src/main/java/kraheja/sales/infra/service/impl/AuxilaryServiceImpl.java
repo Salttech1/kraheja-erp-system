@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 
 import kraheja.commons.entity.Hsnsacmaster;
 import kraheja.commons.repository.HsnsacmasterRepository;
+import kraheja.constant.ApiResponseMessage;
+import kraheja.exception.InternalServerError;
 import kraheja.sales.bean.entitiesresponse.Balance;
 import kraheja.sales.bean.request.AuxilaryRequest;
 import kraheja.sales.bean.response.AuxilaryResponse;
@@ -35,28 +37,31 @@ public class AuxilaryServiceImpl implements AuxilaryService {
 	@Autowired
 	private OutrateRepository outrateRepository;
 
-	
 	@Override
 	public AuxilaryResponse getGridData(AuxilaryRequest request) {
 
 		String strStartDate = null;
+		
+		try {
 		/**
 		 * check here the type of service and type of bill set from here the query.
 		 */
 		if ("AUXI".equalsIgnoreCase(request.getChargeCode())) {
 
-			strStartDate = startYearMonthFromDatabase(request.getBuildingCode(), request.getWing(),request.getFlatNum(), request.getBillType());
+			strStartDate = startYearMonthFromDatabase(request.getBuildingCode(), request.getWing(),
+					request.getFlatNum(), request.getBillType());
 			log.debug("strStartDate : {}", strStartDate);
 
-			if (strStartDate.isEmpty()) {
+			if (strStartDate.isEmpty() || strStartDate == null) {
 				strStartDate = startYearMonthFromInput(request.getDate());
 			}
 		} else {
-
+			
 		}
-		List<Balance> balanceList = outinfraRepository.findPreviousBalance((request.getBuildingCode() + request.getWing() + request.getFlatNum()),strStartDate,request.getChargeCode(), request.getBillType());
+		List<Balance> balanceList = outinfraRepository.findPreviousBalance(
+				(request.getBuildingCode() + request.getWing() + request.getFlatNum()), strStartDate,
+				request.getChargeCode(), request.getBillType());
 
-		try {
 			if (!balanceList.isEmpty()) {
 				for (Balance balance : balanceList) {
 				}
@@ -64,20 +69,20 @@ public class AuxilaryServiceImpl implements AuxilaryService {
 			request.setDate(strStartDate);
 			List<GridResponse> respone = taxCalculation(request);
 			log.debug("respone : {}", respone);
-			
+
 			String totalMonthCount = String.valueOf(respone.size());
-			String endMonth = DateUtill.endMonth((respone.size()-1) + Integer.parseInt(strStartDate));
-			
+			String endMonth = DateUtill.endMonth((respone.size() - 1) + Integer.parseInt(strStartDate));
+
 			return AuxilaryResponse.builder().result("success").responseCode("00").message("successfully fetch.")
-					.startMonth(strStartDate).endMonth(endMonth).totalMonth(totalMonthCount)
-					.data(respone).build();
+					.startMonth(strStartDate).endMonth(endMonth).totalMonth(totalMonthCount).data(respone).build();
 
-		} catch (Exception e) {
+		} catch (NullPointerException e) {
 			log.debug("exception occured : {}", e.getMessage());
-
-		}
-
-		return AuxilaryResponse.builder().build();
+			throw new InternalServerError(ApiResponseMessage.START_DATE_NOT_SPECIFIED);
+		} catch (Exception e) {
+		log.debug("exception occured : {}", e.getMessage());
+		throw new InternalServerError(e.getMessage());
+	}
 	}
 
 	// use this method to fetch start date
@@ -108,7 +113,7 @@ public class AuxilaryServiceImpl implements AuxilaryService {
 
 	public List<GridResponse> taxCalculation(AuxilaryRequest request) {
 		List<GridResponse> insertRowList = new ArrayList<>();
-		
+
 		String buildingCode = request.getBuildingCode();
 		String wing = request.getWing();
 		String flatNum = request.getFlatNum();
@@ -141,13 +146,12 @@ public class AuxilaryServiceImpl implements AuxilaryService {
 		while (amount > 0) {
 //			amount = this.calculateAllocation(amount, adminRate, maintRate, receiptTds, tdsRate, prevAdminPaid,
 //					prevMaintPaid, prevAmtintPaid, prevCGSTtaxPaid, prevSGSTtaxPaid, prevIGSTtaxPaid, prevTDStaxPaid, billType, date);
-			
-			
+
 			Hsnsacmaster gst = hsnsacmasterRepository.findByHsnsacmasterCKHsmsCode("995419");
 			Double cgstPerc = gst.getHsmsCgstperc();
 			Double sgstPerc = gst.getHsmsSgstperc();
 			Double igstPerc = 0.00;
-			
+
 			double prevCGSTAdmin = 0;
 			double prevSGSTAdmin;
 			double prevIGSTAdmin;
@@ -155,7 +159,7 @@ public class AuxilaryServiceImpl implements AuxilaryService {
 			double prevSGSTMaint = 0;
 			double prevIGSTMaint;
 			double cgstOnAdminRate;
-			double sgstOnAdminRate; 
+			double sgstOnAdminRate;
 			double igstOnAdminRate = 0;
 			double cgstOnMaintRate;
 			double sgstOnMaintRate;
@@ -221,8 +225,8 @@ public class AuxilaryServiceImpl implements AuxilaryService {
 			if ((prevAdminPaid + prevCGSTAdmin + prevSGSTAdmin + prevIGSTAdmin + prevAmtintPaid + prevCGSTMaint
 					+ prevSGSTMaint + prevIGSTMaint) >= (adminRate + cgstOnAdminRate + sgstOnAdminRate + igstOnAdminRate
 							+ maintRate + cgstOnMaintRate + sgstOnMaintRate + igstOnMaintRate)) {
-				 continue;
-			}else {
+				continue;
+			} else {
 				// If Admin amount remains to be adjusted
 				/***************** ADMIN Start **************************************/
 				adjAdmin = adminRate - prevAdminPaid;
@@ -352,35 +356,37 @@ public class AuxilaryServiceImpl implements AuxilaryService {
 			double cgst = adjCGSTAdmin + adjCGSTMaint;
 			double sgst = adjSGSTAdmin + adjSGSTMaint;
 			double igst = adjIGSTAdmin + adjIGSTMaint;
-			GridResponse response = insertRow(date, adjAdmin, adjMaint, cgst, sgst, igst, adjTDS, cgstPerc, sgstPerc, igstPerc, narration);
+			GridResponse response = insertRow(date, adjAdmin, adjMaint, cgst, sgst, igst, adjTDS, cgstPerc, sgstPerc,
+					igstPerc, narration);
 			insertRowList.add(response);
-			
+
 			date = increaseMonth(date);
 		}
-		
+
 		return insertRowList;
 	}
 
-	private GridResponse insertRow(String startDate, double adjAdmin, double adjMaint, double cgst, double sgst, double igst,
-			double adjTDS, double cgstPerc, double sgstPerc, double igstPerc, String narration) {
+	private GridResponse insertRow(String startDate, double adjAdmin, double adjMaint, double cgst, double sgst,
+			double igst, double adjTDS, double cgstPerc, double sgstPerc, double igstPerc, String narration) {
 		List<GridResponse> list = new ArrayList<>();
-		
-		GridResponse response = GridResponse.builder().monthName(startDate).narration(narration).narrationCode("FP").intPaid(0).cgst(cgst)
-				.sgst(sgst).igst(igst).auxiPaid(adjMaint).admin(adjAdmin).cgstPercent(cgstPerc).sgstPercent(sgstPerc)
-				.igstPercent(igstPerc).tds(adjTDS).build();
+
+		GridResponse response = GridResponse.builder().monthName(startDate).narration(narration).narrationCode("FP")
+				.intPaid(0).cgst(cgst).sgst(sgst).igst(igst).auxiPaid(adjMaint).admin(adjAdmin).cgstPercent(cgstPerc)
+				.sgstPercent(sgstPerc).igstPercent(igstPerc).tds(adjTDS).build();
 
 		log.debug("GridResponse : {}", list);
 		return response;
 
 	}
+
 	private String increaseMonth(String month) {
-		 // Parse the input string to a YearMonth object
-       YearMonth inputYearMonth = YearMonth.parse(month, DateTimeFormatter.ofPattern("yyyyMM"));
+		// Parse the input string to a YearMonth object
+		YearMonth inputYearMonth = YearMonth.parse(month, DateTimeFormatter.ofPattern("yyyyMM"));
 
-       // Add one month to the YearMonth
-       YearMonth newYearMonth = inputYearMonth.plusMonths(1);
+		// Add one month to the YearMonth
+		YearMonth newYearMonth = inputYearMonth.plusMonths(1);
 
-       // Format the new YearMonth back to the YYYYMM format
-       return newYearMonth.format(DateTimeFormatter.ofPattern("yyyyMM"));
+		// Format the new YearMonth back to the YYYYMM format
+		return newYearMonth.format(DateTimeFormatter.ofPattern("yyyyMM"));
 	}
 }

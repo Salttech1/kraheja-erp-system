@@ -28,5 +28,8 @@ public class ApiResponseMessage {
 	public static final String EXCEPTION_OCCURE = "exception occure.";
 	
 	public static final String INCHEQ_DETAIL_FAILED_TO_SAVE = "incheq detail failed to save.";
+	public static final String CHEQUE_ALREADY_IN_USED = "cheque number already in used. please check the cheque number.";
+	public static final String START_DATE_NOT_SPECIFIED = "start date is not specified. please contact to admin.";
+	
 	
 }

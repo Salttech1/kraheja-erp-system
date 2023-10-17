@@ -1,12 +1,9 @@
 package kraheja.configuration;
 
-import java.sql.SQLException;
-import java.sql.SQLIntegrityConstraintViolationException;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -233,20 +230,15 @@ public class ApplicationExceptionConfiguration extends ResponseEntityExceptionHa
 				HttpStatus.BAD_REQUEST);
 	}
 	
-	@ExceptionHandler(SQLIntegrityConstraintViolationException.class) 
-	public ResponseEntity<GenericResponse> violationExceptionHandler(SQLIntegrityConstraintViolationException exception) {
-		log.error("constraint violation exception handler: {}", exception.getMessage());
-		
-		return new ResponseEntity<>(GenericResponse.builder().message(exception.getMessage()).result(Result.FAILED).responseCode("400").build(), 
-				HttpStatus.BAD_REQUEST);
-	}
-	
-	@ExceptionHandler(SQLException.class) 
-	public ResponseEntity<GenericResponse> violationExceptionHandler(SQLException  exception) {
-		log.error("constraint violation exception handler: {}", exception.getMessage());
-		
-		return new ResponseEntity<>(GenericResponse.builder().message(exception.getMessage()).result(Result.FAILED).responseCode("400").build(), 
-				HttpStatus.BAD_REQUEST);
-	}
-
+	 @ExceptionHandler(kraheja.exception.ConstraintViolationException.class)
+	    public ResponseEntity<GenericResponse> handleUniqueConstraintViolationException(kraheja.exception.ConstraintViolationException ex) {
+		 return new ResponseEntity<>(GenericResponse.builder().message(ex.getMessage()).result(Result.FAILED).responseCode(ApiResponseCode.CHEQUE_NUMBER_USED).build(), 
+					HttpStatus.INTERNAL_SERVER_ERROR);
+	    }
+	 
+	 @ExceptionHandler(kraheja.exception.InternalServerError.class)
+	    public ResponseEntity<GenericResponse> handleInternalServerException(kraheja.exception.InternalServerError ex) {
+		 return new ResponseEntity<>(GenericResponse.builder().message(ex.getMessage()).result(Result.FAILED).responseCode(ApiResponseCode.CHEQUE_NUMBER_USED).build(), 
+					HttpStatus.INTERNAL_SERVER_ERROR);
+	    }
 }

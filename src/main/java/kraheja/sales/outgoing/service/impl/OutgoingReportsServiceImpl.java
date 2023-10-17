@@ -11,7 +11,6 @@ import java.util.Date;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.Tuple;
@@ -651,13 +650,12 @@ public class OutgoingReportsServiceImpl implements OutgoingReportsService {
 		String wing, billNo = "", prevBillNo = "", bldgCode, flatNum, billMonth, startOgMonth, qtrEndDateCalc = "",
 				qtrYear = "", currBillDate = "", currBillMonth = "", status, particularDesc, particularCode, sqlString,
 				sqlWhere, sqlMonthWhere, rectDate, prevBillDate = "", lastBillDate = "", intCalcFrom = "",
-				intCalcFromInt = "", billMM, intFrom;
+				intCalcFromInt = "", billMM, intFrom = "", recDate;
 		Double billArrears = 0.0, billMonthlyOsInt = 0.0, rectAmt = 0.0, billInterest = 0.0, rectInterest = 0.0,
 				totAmtReceived = 0.0, totIntReceived = 0.0, currBillInterest = 0.0, currBillInterestInterest = 0.0,
-				finalIntAmt = 0.0, oldIntAmt = 0.0;
+				finalIntAmt = 0.0;
 		Integer startMonth, endMonth, chqCount = 0;
 		long noOfDays = 0;
-		Date recDate;
 
 		bldgCode = carParkOwnerId.substring(0, 4);
 		particularDesc = "Interest On Arrears";
@@ -743,23 +741,38 @@ public class OutgoingReportsServiceImpl implements OutgoingReportsService {
 			billMM = lastBillDate;
 
 			// Calculate Interest Amount From Receipt
-			sqlString = "SELECT out_recdate , round(nvl(sum(nvl(out_amtpaid,0) + nvl(out_admincharges,0) + nvl(out_cgst ,0) + nvl(out_sgst ,0) + "
+			sqlString = "SELECT to_char(out_recdate,'dd/mm/yyyy') AS out_recdate , round(nvl(sum(nvl(out_amtpaid,0) + nvl(out_admincharges,0) + nvl(out_cgst ,0) + nvl(out_sgst ,0) + "
 					+ "nvl(out_igst ,0)  + nvl(out_servtax ,0)  + nvl(out_swachhcess ,0)  + nvl(out_krishicess ,0)  + nvl(out_propertytax ,0) + "
 					+ "nvl(out_water ,0) + nvl(out_elect ,0) + nvl(out_natax ,0) ),0)) as rectotal , round(sum(out_amtint)) as intrecd "
 					+ "FROM outcoll WHERE out_bldgcode = '" + bldgCode + "' AND out_wing = '" + wing
 					+ "' AND out_flatnum = '" + flatNum + "' " + "AND to_char(out_recdate,'dd/mm/yyyy') > '"
-					+ prevBillDate + "' AND to_char(out_recdate,'dd/mm/yyyy') <= '" + currBillDate.substring(0, 2)
-					+ currBillDate.substring(3, 5) + currBillDate.substring(6, 10) + "' " + "AND out_rectype = '"
+					+ prevBillDate + "' AND to_char(out_recdate,'dd/mm/yyyy') <= '" + currBillDate.substring(0, 2) + "/"
+					+ currBillDate.substring(3, 5) + "/" + currBillDate.substring(6, 10) + "' " + "AND out_rectype = '"
 					+ billType + "' AND out_cancelledyn = 'N'  group by out_recdate ";
+
+//			String prevBillDateddMMMyyyy, currBillDateddMMMyyyy;
+//			here
+
+//			prevBillDateddMMMyyyy = new SimpleDateFormat("dd-MM-yyyy").parse(prevBillDate).toString();
+//			currBillDateddMMMyyyy = new SimpleDateFormat("dd-MM-yyyy").parse(currBillDate).toString();
+
+			sqlString = "SELECT to_char(out_recdate,'dd/mm/yyyy') AS out_recdate , round(nvl(sum(nvl(out_amtpaid,0) + nvl(out_admincharges,0) + nvl(out_cgst ,0) + nvl(out_sgst ,0) + "
+					+ "nvl(out_igst ,0)  + nvl(out_servtax ,0)  + nvl(out_swachhcess ,0)  + nvl(out_krishicess ,0)  + nvl(out_propertytax ,0) + "
+					+ "nvl(out_water ,0) + nvl(out_elect ,0) + nvl(out_natax ,0) ),0)) as rectotal , round(sum(out_amtint)) as intrecd "
+					+ "FROM outcoll WHERE out_bldgcode = '" + bldgCode + "' AND out_wing = '" + wing
+					+ "' AND out_flatnum = '" + flatNum + "' " + "AND out_recdate > to_date('" + prevBillDate
+					+ "','dd/mm/yyyy') AND out_recdate <= to_date('" + currBillDate + "','dd/mm/yyyy') "
+					+ "AND out_rectype = '" + billType + "' AND out_cancelledyn = 'N'  group by out_recdate ";
+
 			query = this.entityManager.createNativeQuery(sqlString, Tuple.class);
 			List<Tuple> rectTuple = query.getResultList();
 			if (rectTuple.size() > 0) {
 				for (Tuple rectList : rectTuple) {
 //					chqCount is used as logic is different for first Receipt recd as difference is between Last Bill Date and Receipt Date 
 					chqCount = chqCount + 1;
-					rectAmt = rectList.get("rectotal", Double.class);
-					rectInterest = rectList.get("intrecd", Double.class);
-					recDate = rectList.get("out_recdate", Date.class);
+					rectAmt = rectList.get("rectotal", BigDecimal.class).doubleValue();
+					rectInterest = rectList.get("intrecd", BigDecimal.class).doubleValue();
+					recDate = rectList.get("out_recdate", String.class);
 					if (recDate == null) { // How can Recdate be null
 						billMM = lastBillDate;
 						intFrom = billMM;
@@ -774,34 +787,35 @@ public class OutgoingReportsServiceImpl implements OutgoingReportsService {
 							LocalDate.parse(billMM, DateTimeFormatter.ofPattern("d/MM/yyyy")));
 
 					if (billArrears > 0) {
-						if (chqCount != 1) {
-							intCalcFrom = lastBillDate;
+						if (chqCount == 1) {
+							if (noOfDays > 30) {
+								currBillInterest = currBillInterest
+										+ procIntAmount(lastBillDate, billMM, billArrears, billMode);
+								intCalcFrom = billMM;
+							}
+						} else {
+							if (noOfDays > 30) {
+								currBillInterest = currBillInterest
+										+ procIntAmount(intCalcFrom, billMM, billArrears, billMode);
+								intCalcFrom = billMM;
+							}
 						}
-						if (noOfDays > 30) {
-							intCalcFrom = lastBillDate;
-							currBillInterest = currBillInterest
-									+ procIntAmount(lastBillDate, billMM, billArrears, billMode);
-//								if (currBillInterest < 0) {
-//									currBillInterest = 0.0;
-//								}
-							intCalcFrom = billMM;
-						}
-
 					}
 					billArrears = billArrears - rectAmt;
 					// Monthly_os_interest
 					if (billMonthlyOsInt > 0) {
-						if (chqCount != 1) {
-							intCalcFromInt = lastBillDate;
+						if (chqCount == 1) {
+							if (noOfDays > 30) {
+								currBillInterestInterest = currBillInterestInterest
+										+ procIntAmount(lastBillDate, billMM, billMonthlyOsInt, billMode);
+							}
+						} else {
+							if (noOfDays > 30) {
+								currBillInterestInterest = currBillInterestInterest
+										+ procIntAmount(intFrom, billMM, billMonthlyOsInt, billMode);
+							}
 						}
-						if (noOfDays > 30) {
-							currBillInterestInterest = currBillInterestInterest
-									+ procIntAmount(lastBillDate, billMM, billMonthlyOsInt, billMode);
-//								if (currBillInterestInterest < 0) {
-//									currBillInterestInterest = 0.0;
-//								}
-							intCalcFromInt = billMM;
-						}
+						intCalcFromInt = billMM;
 					}
 					billMonthlyOsInt = billMonthlyOsInt - rectInterest;
 
@@ -821,7 +835,7 @@ public class OutgoingReportsServiceImpl implements OutgoingReportsService {
 //						currBillInterestInterest = 0.0;
 //					}
 				}
-				finalIntAmt = oldIntAmt - totIntReceived + currBillInterestInterest + currBillInterest;
+				finalIntAmt = billInterest - totIntReceived + currBillInterestInterest + currBillInterest;
 			} else { // IF NO RECEIPT RECEIVED THEN FOLLOWING
 				if (billArrears > 0) {
 					currBillInterest = currBillInterest + procIntAmount(lastBillDate, billDate, billArrears, billMode);
@@ -829,14 +843,14 @@ public class OutgoingReportsServiceImpl implements OutgoingReportsService {
 //						currBillInterest = 0.0;
 //					}
 				}
-				if (oldIntAmt > 0) {
+				if (billInterest > 0) {
 					currBillInterestInterest = currBillInterestInterest
-							+ procIntAmount(lastBillDate, billDate, oldIntAmt, billMode);
+							+ procIntAmount(lastBillDate, billDate, billInterest, billMode);
 //					if (currBillInterestInterest < 0) {
 //						currBillInterestInterest = 0.0;
 //					}
 				}
-				finalIntAmt = totIntReceived + currBillInterestInterest + currBillInterest;
+				finalIntAmt = billInterest + currBillInterestInterest + currBillInterest;
 			}
 			if (finalIntAmt < 0) {
 				finalIntAmt = 0.0;
@@ -1095,42 +1109,29 @@ public class OutgoingReportsServiceImpl implements OutgoingReportsService {
 			wing = flatOwner.substring(4, 5);
 			startOgMonth = initStartOgMonth(flatOwner, bldgCode, flatNo, wing, billMonth, billType, billMode);
 
+			// Fetch invoice, irnno, billnum generated for the selected bill date
 			sqlString = " FROM outbill WHERE obill_bldgcode = '" + bldgCode + "' AND obill_ownerid = '" + flatOwner
 					+ "' AND obill_month = '" + startOgMonth + "' " + "AND obill_gstyn = 'Y' AND obill_billtype = '"
 					+ billType + "' ";
 
-			// Fetch invoice generated for the selected bill date
-			try {
-				query = this.entityManager.createNativeQuery("SELECT nvl(obill_invoiceno,' ') " + sqlString);
-				invoiceNo = String.valueOf(query.getSingleResult());
-				if (invoiceNo != "") {
-					invoiceNo = " ";
+			query = this.entityManager.createNativeQuery(
+					"SELECT nvl(obill_invoiceno,' ') AS obill_invoiceno ,  obill_irnno , obill_billnum " + sqlString,
+					Tuple.class);
+			List<Tuple> billTuple = query.getResultList();
+			if (billTuple.size() > 0) {
+				for (Tuple billList : billTuple) {
+					invoiceNo = billList.get("obill_invoiceno", String.class);
+					irnNo = billList.get("obill_irnno", String.class);
+					billNum = billList.get("obill_billnum", String.class);
 				}
-			} catch (NoResultException e) {
-				invoiceNo = " ";
 			}
 
-			// Fetch IRN No generated for the selected bill date
-			try {
-				query = this.entityManager.createNativeQuery("SELECT obill_irnno " + sqlString);
-				irnNo = String.valueOf(query.getSingleResult());
-			} catch (NoResultException e) {
-				irnNo = "";
-			}
-
-			// Fetch Bill No generated for the selected bill date
-			try {
-				query = this.entityManager.createNativeQuery("SELECT obill_billnum " + sqlString);
-				billNum = String.valueOf(query.getSingleResult());
-				if (billNum == "") {
-					billNum = GenericCounterIncrementLogicUtil.generateTranNoWithSite("#NSER", "OGBIL",
-							GenericAuditContextHolder.getContext().getSite());
-				}
-			} catch (NoResultException e) {
+			if (billNum == "") {
 //				billNum = GenericCounterIncrementLogicUtil.generateTranNoWithSite("#NSER", "OGBIL",
 //						GenericAuditContextHolder.getContext().getSite());
 				billNum = GenericCounterIncrementLogicUtil.generateTranNoWithSite("#NSER", "OGBIL", "MUM");
 			}
+
 			parkingNos = "";
 
 			sqlString = "SELECT flat_flatnum,flat_ownerid FROM flats, outrate WHERE flat_bldgcode = outr_bldgcode AND flat_wing = outr_wing "

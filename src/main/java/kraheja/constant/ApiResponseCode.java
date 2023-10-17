@@ -23,4 +23,6 @@ public class ApiResponseCode {
 	public static final String JSON_MAPPING_ERROR = "108";
 	
 	public static final String FAILED = "109";
+	
+	public static final String CHEQUE_NUMBER_USED = "110";
 }
