@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import javax.persistence.PersistenceException;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,8 +14,6 @@ import org.springframework.stereotype.Service;
 
 import kraheja.arch.projbldg.dataentry.repository.BuildingRepository;
 import kraheja.commons.bean.ActrandBean;
-import kraheja.commons.entity.Actrand;
-import kraheja.commons.entity.ActrandCK;
 import kraheja.commons.entity.Actranh;
 import kraheja.commons.entity.ActranhCK;
 import kraheja.commons.entity.Actranhx;
@@ -28,7 +25,6 @@ import kraheja.commons.mappers.pojoentity.AddPojoEntityMapper;
 import kraheja.commons.repository.ActrandRepository;
 import kraheja.commons.repository.ActranhRepository;
 import kraheja.commons.repository.ActranhxRepository;
-import kraheja.commons.repository.CompanyRepository;
 import kraheja.commons.repository.GlchartRepository;
 import kraheja.commons.repository.InchqRepository;
 import kraheja.commons.repository.PartyRepository;
@@ -38,7 +34,6 @@ import kraheja.constant.ApiResponseCode;
 import kraheja.constant.ApiResponseMessage;
 import kraheja.constant.Result;
 import kraheja.exception.ConstraintViolationException;
-import kraheja.exception.InternalServerError;
 import kraheja.sales.bean.entitiesresponse.AuxiBuildingDBResponse;
 import kraheja.sales.bean.entitiesresponse.GlchartDBResponse;
 import kraheja.sales.bean.request.ChequeRequest;
@@ -83,7 +78,7 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 	private ActranhRepository actranhRepository;
 
 	@Autowired
-	private  ActrandRepository actrandRepository;
+	private ActrandRepository actrandRepository;
 
 	@Autowired
 	private ActranhxRepository actranhxRepository;
@@ -93,7 +88,8 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 	 * this method is use to get party code and minor map.
 	 * </p>
 	 */
-	private Map<String, String> getPartyCodeAndMinor(String bldgCode, String wing, String flatNumber,String chargeCode) {
+	private Map<String, String> getPartyCodeAndMinor(String bldgCode, String wing, String flatNumber,
+			String chargeCode) {
 
 		Map<String, String> partyCodeMinorMap = new HashMap<>();
 		String partyCode = "";
@@ -133,9 +129,10 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 	}
 
 	@Override
-	public InchequeResponse saveIncheqe(String bldgCode, String wing, String flatNumber, String chargeCode, InchequeRequest inchequeRequest) {
+	public InchequeResponse saveIncheqe(String bldgCode, String wing, String flatNumber, String chargeCode,
+			InchequeRequest inchequeRequest) {
 		log.debug("inchequeRequest: {}", inchequeRequest);
-		
+
 		String result = Result.FAILED;
 		String message = ApiResponseMessage.INCHEQ_DETAIL_FAILED_TO_SAVE;
 		String responseCode = ApiResponseCode.FAILED;
@@ -143,13 +140,12 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 		String chequeNo = "";
 		String siteName = GenericAuditContextHolder.getContext().getSite();
 		String userId = GenericAuditContextHolder.getContext().getUserid();
-	
-		
-		String receiptNumber = GenericCounterIncrementLogicUtil.generateTranNoWithSite("#NSER", "#REC",siteName);
+
+		String receiptNumber = GenericCounterIncrementLogicUtil.generateTranNoWithSite("#NSER", "#REC", siteName);
 		log.debug("receiptNumber: {}", receiptNumber);
-		
+
 		String recieptDate = DateUtill.dateFormatter(inchequeRequest.getReceiptDate());
-		
+
 		String inchqMode = "C";
 
 		Map<String, String> partyCodeAndMinor = getPartyCodeAndMinor(bldgCode, wing, flatNumber, chargeCode);
@@ -159,9 +155,8 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 
 		AuxiBuildingDBResponse buildingDBResponse = buildingRepository.findBuildingByCode(bldgCode);
 		log.debug("buildingDBResponse : {} ", buildingDBResponse);
-		
+
 		GlchartDBResponse glchartDBResponse = glchartRepository.fetchChartCfrecgroup("11401233");
-//		GlchartDBResponse glchartDBResponse = new GlchartDBResponse();
 		log.debug("glchartDBResponse : {}", glchartDBResponse);
 
 		String rgroupc = String.format("%1$6s", glchartDBResponse.getChartRgroupc());
@@ -176,9 +171,7 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 		if (cfrecgroup.equals("XXXXXX")) {
 			cfrecgroup = "";
 		}
-		
-		
-		
+
 		List<ChequeRequest> cheques = inchequeRequest.getCheques();
 		List<InchequeDetailResponse> chequeResponse = new ArrayList<>();
 
@@ -203,112 +196,100 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 				}
 				InchqCK ck = InchqCK.builder().inchqNum(chequeRequest.getChequeNumber()) // 1
 						.inchqBank(chequeRequest.getBank()) // 4
-//             		.inchqCoy("SOGR")
-//             		.inchqRecnum("")
-						.build();
+						.inchqTranser(receiptNumber).build();
 
 				Inchq inchqEntity = Inchq.builder().inchqCk(ck).inchqPaymode(inchqMode) // 0
 						.inchqAmount(chqAmt) // 2
 						.inchqDate(chequeRequest.getChequeDate()) // 3
 						.inchqOutstat(chequeRequest.getOutstat()) // 5
-//             		.inchqResubcount(0.00)
-//             		.inchqRemark(null)
-						.inchqProprietor(buildingDBResponse.getBldgProp())
-//             		.inchqOrigsys(partyCode)
-						.inchqPartycode(partyCode).inchqFund(chequeRequest.getFundSource())
-						.inchqActype(chequeRequest.getAcType())
-//             		.inchqLoanyn("")
-						.inchqSite(siteName).inchqUserid(userId).inchqToday(LocalDateTime.now())
-//             		.inchqOrigsite("")
-//             		.inchqCoybank("")
-						.build();
+						.inchqRemark("").inchqProprietor(buildingDBResponse.getBldgProp()).inchqPartycode(partyCode)
+						.inchqFund(chequeRequest.getFundSource()).inchqActype(chequeRequest.getAcType())
+						.inchqSite(siteName).inchqUserid(userId).inchqToday(LocalDateTime.now()).build();
 
 				Inchq save = inchqRepository.save(inchqEntity);
-				
-				
+
 				InchequeDetailResponse inchequeDetailResponse = new InchequeDetailResponse();
 				if (!(save.getInchqCk().getInchqBank()).equals(null)) {
 					inchequeDetailResponse.setChequeNumber(save.getInchqCk().getInchqNum());
 					inchequeDetailResponse.setChequeAmount(save.getInchqAmount().toString());
-					;
-					inchequeDetailResponse.setMessage("incheq detail save successfully.");
+					inchequeDetailResponse.setMessage(ApiResponseMessage.INCHEQUE_SAVE_SUCCESS);
 					result = Result.SUCCESS;
 					responseCode = ApiResponseCode.SUCCESS;
 					message = "incheq detail save successfully.";
 				} else {
 					inchequeDetailResponse.setChequeNumber(save.getInchqCk().getInchqNum());
 					inchequeDetailResponse.setChequeAmount(save.getInchqAmount().toString());
-					inchequeDetailResponse.setMessage("incheq detail failed to save.");
+					inchequeDetailResponse.setMessage(ApiResponseMessage.INCHEQ_DETAIL_FAILED_TO_SAVE);
 				}
 				chequeResponse.add(inchequeDetailResponse);
 
 			}
-		
-		String outInfraPersistResult = this.saveOutInfra(inchequeRequest.getGridRequest(), userId, siteName, bldgCode,
-				wing, flatNumber, chargeCode, inchequeRequest.getReceiptDate(), receiptNumber);
-		log.debug("out infra persist result: {}", outInfraPersistResult);
 
-		/*
-		 * this method is use for insert int actranh table
-		 */
-		ActranhCK actranhCk = ActranhCK.builder().acthTranser(receiptNumber)
-				.acthCoy(buildingDBResponse.getBldgCoy()).build();
-		Actranh actranh = Actranh.builder().actranhCK(actranhCk).acthTrantype("RC").acthTrandate(LocalDateTime.now())
-				.acthLedgcode("").acthPartytype("F").acthPartycode(partyCode).acthTranamt(inchequeRequest.getTransactionAmt())
-				.acthProprietor(buildingDBResponse.getBldgProp()).acthVounum(receiptNumber)
-				.acthVoudate(LocalDateTime.now().toLocalDate()).acthPostedyn("N").acthSite(siteName).acthUserid(userId)
-				.acthToday(LocalDateTime.now()).acthClearacyn("N").acthReverseyn("N").acthProvyn("N").build();
+			String outInfraPersistResult = this.saveOutInfra(inchequeRequest.getGridRequest(), userId, siteName,
+					bldgCode, wing, flatNumber, chargeCode, inchequeRequest.getReceiptDate(), receiptNumber);
+			log.debug("out infra persist result: {}", outInfraPersistResult);
 
-		String updateActranhResult = this.updateActranh(actranh);
-		log.debug("actranh persistance result: {}", updateActranhResult);
+			/*
+			 * this method is use for insert int actranh table
+			 */
+			ActranhCK actranhCk = ActranhCK.builder().acthTranser(receiptNumber)
+					.acthCoy(buildingDBResponse.getBldgCoy()).build();
+			Actranh actranh = Actranh.builder().actranhCK(actranhCk).acthTrantype("RC")
+					.acthTrandate(LocalDateTime.now()).acthLedgcode("").acthPartytype("F").acthPartycode(partyCode)
+					.acthTranamt(inchequeRequest.getTransactionAmt()).acthProprietor(buildingDBResponse.getBldgProp())
+					.acthVounum(receiptNumber).acthVoudate(LocalDateTime.now().toLocalDate()).acthPostedyn("N")
+					.acthSite(siteName).acthUserid(userId).acthToday(LocalDateTime.now()).acthClearacyn("N")
+					.acthReverseyn("N").acthProvyn("N").build();
 
-		List<ActrandBean> actrandList = new ArrayList<>();
-		int bunum = 1;
-		if (inchequeRequest.getCgstAmt() >= 0) {
-			actrandList.addAll(GenericAccountingLogic.initialiseActrandBreakups(
-					"RC", "80000006", "C", chargeCode, "F", partyCode,
-					"GL", minor, "11401233", "", "", "", 
-					"GL", "", inchequeRequest.getCgstAmt(), bldgCode, "", "", DateUtill.dateFormatter(LocalDateTime.now()), bunum, "", actranh.getActranhCK().getActhTranser(), "PL",
-					buildingDBResponse.getBldgProp(), buildingDBResponse.getBldgCoy(), "", DateUtill.dateFormatter(LocalDateTime.now()), "", "", "", "", 0.00, receiptNumber,
-					recieptDate, "", "F", partyCode));
-			bunum = bunum + 2;
-		}
-		if (inchequeRequest.getSgstAmt() >= 0) {
-			actrandList.addAll(GenericAccountingLogic.initialiseActrandBreakups(
-					"RC", "80000006", "C", chargeCode, "F", partyCode,
-					"GL", minor, "11401233", "", "", "", 
-					"GL", "", inchequeRequest.getSgstAmt(), bldgCode, "", "", DateUtill.dateFormatter(LocalDateTime.now()), bunum, "", actranh.getActranhCK().getActhTranser(), "PL",
-					buildingDBResponse.getBldgProp(), buildingDBResponse.getBldgCoy(), "", DateUtill.dateFormatter(LocalDateTime.now()), "", "", "", "", 0.00, receiptNumber,
-					recieptDate, "", "F", partyCode));
-			bunum = bunum + 2;
-		}
-		if (inchequeRequest.getTdsAmt() >= 0) {
-			actrandList.addAll(GenericAccountingLogic.initialiseActrandBreakups(
-					"RC", "80000006", "C", chargeCode, "F", partyCode,
-					"GL", minor, "11401233", "", "", "", 
-					"GL", "", inchequeRequest.getTdsAmt(), bldgCode, "", "", DateUtill.dateFormatter(LocalDateTime.now()), bunum, "", actranh.getActranhCK().getActhTranser(), "PL",
-					buildingDBResponse.getBldgProp(), buildingDBResponse.getBldgCoy(), "", DateUtill.dateFormatter(LocalDateTime.now()), "", "", "", "", 0.00, receiptNumber,
-					recieptDate, "", "F", partyCode));
-			bunum = bunum + 2;
-		}
-		log.debug("bunum#########################: {}", bunum);
+			String updateActranhResult = this.updateActranh(actranh);
+			log.debug("actranh persistance result: {}", updateActranhResult);
 
-		actrandList.addAll(GenericAccountingLogic.initialiseActrandBreakups(
-				"RC", "80000006", "C", chargeCode, "F", partyCode,
-				"GL", minor, "11401233", "", "", "", 
-				"GL", "", inchequeRequest.getTransactionAmt(), bldgCode, "", "", DateUtill.dateFormatter(LocalDateTime.now()), bunum, "", actranh.getActranhCK().getActhTranser(), "PL",
-				buildingDBResponse.getBldgProp(), buildingDBResponse.getBldgCoy(), "", DateUtill.dateFormatter(LocalDateTime.now()), "", "", "", "", 0.00, receiptNumber,
-				recieptDate, "", "F", partyCode));
-				
-		log.debug("initialiseActrandBreakups: {}", actrandList);
+			List<ActrandBean> actrandList = new ArrayList<>();
+			int bunum = 1;
+			if (inchequeRequest.getCgstAmt() >= 0) {
+				actrandList.addAll(GenericAccountingLogic.initialiseActrandBreakups("RC", "80000006", "C", chargeCode,
+						"F", partyCode, "GL", minor, "11401233", "", "", "", "GL", "", inchequeRequest.getCgstAmt(),
+						bldgCode, "", "", DateUtill.dateFormatter(LocalDateTime.now()), bunum, "",
+						actranh.getActranhCK().getActhTranser(), "PL", buildingDBResponse.getBldgProp(),
+						buildingDBResponse.getBldgCoy(), "", DateUtill.dateFormatter(LocalDateTime.now()), "", "", "",
+						"", 0.00, receiptNumber, recieptDate, "", "F", partyCode));
+				bunum = bunum + 2;
+			}
+			if (inchequeRequest.getSgstAmt() >= 0) {
+				actrandList.addAll(GenericAccountingLogic.initialiseActrandBreakups("RC", "80000006", "C", chargeCode,
+						"F", partyCode, "GL", minor, "11401233", "", "", "", "GL", "", inchequeRequest.getSgstAmt(),
+						bldgCode, "", "", DateUtill.dateFormatter(LocalDateTime.now()), bunum, "",
+						actranh.getActranhCK().getActhTranser(), "PL", buildingDBResponse.getBldgProp(),
+						buildingDBResponse.getBldgCoy(), "", DateUtill.dateFormatter(LocalDateTime.now()), "", "", "",
+						"", 0.00, receiptNumber, recieptDate, "", "F", partyCode));
+				bunum = bunum + 2;
+			}
+			if (inchequeRequest.getTdsAmt() >= 0) {
+				actrandList.addAll(GenericAccountingLogic.initialiseActrandBreakups("RC", "80000006", "C", chargeCode,
+						"F", partyCode, "GL", minor, "11401233", "", "", "", "GL", "", inchequeRequest.getTdsAmt(),
+						bldgCode, "", "", DateUtill.dateFormatter(LocalDateTime.now()), bunum, "",
+						actranh.getActranhCK().getActhTranser(), "PL", buildingDBResponse.getBldgProp(),
+						buildingDBResponse.getBldgCoy(), "", DateUtill.dateFormatter(LocalDateTime.now()), "", "", "",
+						"", 0.00, receiptNumber, recieptDate, "", "F", partyCode));
+				bunum = bunum + 2;
+			}
+			log.debug("bunum#########################: {}", bunum);
 
-		actrandRepository.saveAll(AddPojoEntityMapper.addActrandPojoEntityMapping.apply(actrandList));	
+			actrandList.addAll(GenericAccountingLogic.initialiseActrandBreakups("RC", "80000006", "C", chargeCode, "F",
+					partyCode, "GL", minor, "11401233", "", "", "", "GL", "", inchequeRequest.getTransactionAmt(),
+					bldgCode, "", "", DateUtill.dateFormatter(LocalDateTime.now()), bunum, "",
+					actranh.getActranhCK().getActhTranser(), "PL", buildingDBResponse.getBldgProp(),
+					buildingDBResponse.getBldgCoy(), "", DateUtill.dateFormatter(LocalDateTime.now()), "", "", "", "",
+					0.00, receiptNumber, recieptDate, "", "F", partyCode));
 
-		return InchequeResponse.builder().result(result).message(message).responseCode(responseCode).receptNumber(receiptNumber)
-				.chequeResponse(chequeResponse).build();
-		}
-		catch (Exception pe) {
-		    throw new ConstraintViolationException(ApiResponseMessage.CHEQUE_ALREADY_IN_USED);
+			log.debug("initialiseActrandBreakups: {}", actrandList);
+
+			actrandRepository.saveAll(AddPojoEntityMapper.addActrandPojoEntityMapping.apply(actrandList));
+
+			return InchequeResponse.builder().result(result).message(message).responseCode(responseCode)
+					.receptNumber(receiptNumber).chequeResponse(chequeResponse).build();
+		} catch (Exception pe) {
+			throw new ConstraintViolationException(ApiResponseMessage.CHEQUE_ALREADY_IN_USED);
 		}
 	}
 
@@ -354,9 +335,8 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 		}
 
 		for (GridResponse grid : gridRequest) {
-			OutinfraCK outinfraCK = OutinfraCK.builder().infRecnum(receiptNumber)
-					.infOwnerid(ownerId).infBldgcode(bldgCode).infMonth(grid.getMonthName())
-					.infNarrcode(grid.getNarrationCode()).build();
+			OutinfraCK outinfraCK = OutinfraCK.builder().infRecnum(receiptNumber).infOwnerid(ownerId)
+					.infBldgcode(bldgCode).infMonth(grid.getMonthName()).infNarrcode(grid.getNarrationCode()).build();
 
 			Outinfra outinfra = Outinfra.builder().outinfraCK(outinfraCK).infWing(wing).infFlatnum(flatNumber)
 					.infCoy(buildingDBResponse.getBldgCoy()).infAmtdue(0.00).infAmtpaid(grid.getAuxiPaid())

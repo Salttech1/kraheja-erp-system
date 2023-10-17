@@ -17,7 +17,7 @@ public class ApiResponseMessage {
 	public static final String INETNAL_SERVER_ERROR = "internal server error";
 	public static final String UNRECOGNIZED_PROPERTY = "un-recognized property in request fields.";
 	public static final String MANDATORY_FIELDS_MISSING = "mandatory fields missing in request.";
-	public static final String INCHEQUE_SAVE_SUCCESS = "incheque details save successfully.";
+	public static final String INCHEQUE_SAVE_SUCCESS = "incheque details save successfully."; 
 	//400 - BAD REQUEST
 	public static final String MESSAGE_NOT_REDABLE = "message not readable.";
 	public static final String JSON_PARSE_ERROR = "json parse error.";

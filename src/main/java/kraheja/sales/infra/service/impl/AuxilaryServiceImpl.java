@@ -303,7 +303,7 @@ public class AuxilaryServiceImpl implements AuxilaryService {
 								adjCGSTMaint = adjCGSTMa;
 
 								int adjSGSTMa = (int) Math.round(adjSGSTMaint * factor);
-								adjCGSTMaint = adjSGSTMa;
+								adjSGSTMaint = adjSGSTMa;
 
 								int adjIGSTMa = (int) Math.round(adjIGSTMaint * factor);
 								adjIGSTMaint = adjIGSTMa;
