@@ -23,5 +23,8 @@ public interface BuildingRepository extends JpaRepository<Building, BuildingCK> 
 	
 	@Query("select new kraheja.sales.bean.entitiesresponse.AuxiBuildingDBResponse(b.bldgProp, b.bldgProperty, b.bldgProject, b.bldgCoy, b.bldgMaintcoy) from Building b where b.buildingCK.bldgCode= :bldgCode")
 	AuxiBuildingDBResponse findBuildingByCode(String bldgCode);
+	
+	@Query("select b.bldgSalesstate from Building b where b.buildingCK.bldgCode= :bldgCode")
+	String findBldgSalesstateByBuildingCK_BldgCode(String bldgCode);
 
 }

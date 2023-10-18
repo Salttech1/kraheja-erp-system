@@ -15,13 +15,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import kraheja.payload.GenericResponse;
 import kraheja.sales.bean.request.AuxilaryRequest;
 import kraheja.sales.bean.request.InchequeRequest;
 import kraheja.sales.bean.request.OutinfraRequestBean;
 import kraheja.sales.bean.response.AuxilaryResponse;
 import kraheja.sales.bean.response.InchequeResponse;
+import kraheja.sales.infra.bean.request.InfraAuxiBillRequest;
+import kraheja.sales.infra.bean.response.BillResponse;
 import kraheja.sales.infra.service.AuxilaryService;
 import kraheja.sales.infra.service.AuxiliaryPersistanceService;
+import kraheja.sales.infra.service.BillGenerationService;
 import kraheja.sales.infra.service.OutinfraService;
 import lombok.extern.log4j.Log4j2;
  
@@ -35,6 +39,7 @@ public class OutinfraController {
 	
 	@Autowired AuxiliaryPersistanceService auxiPersistanceService;
 	@Autowired AuxilaryService auxilaryService;
+	@Autowired BillGenerationService billGenerationService;
 	
 	//following function will fetch data of flatowner. 
 	
@@ -148,4 +153,14 @@ public class OutinfraController {
 		return ResponseEntity.ok(response);
 	}
 	
+	@PostMapping("/infra-auxi-bill-generation")
+	ResponseEntity<BillResponse> getBill(@Valid @RequestBody InfraAuxiBillRequest billRequest){
+		log.debug("post/request/outinfra/getbill InfraAuxiBillRequest: {} ", billRequest);
+		
+		BillResponse response = billGenerationService.getBillDetail(billRequest);
+		log.debug("post/response/getBill : {}",response);
+		
+		return ResponseEntity.ok(response);
+		
+	}
 }

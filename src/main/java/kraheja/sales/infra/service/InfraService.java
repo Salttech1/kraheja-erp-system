@@ -14,4 +14,6 @@ public interface InfraService {
 	ResponseEntity<?> fetchGstFlag(String recNum);
 	
 	ResponseEntity<?> fetchCarParks(String bldgCode , String wing, String flatNo);
+
+	ResponseEntity<?> fetchAdvanceFlag(String bldgCode , String wing, String flatNo,String recNum,String gstYN);
 }

@@ -1,6 +1,7 @@
 package kraheja.sales.infra.utilities;
 
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
@@ -41,5 +42,8 @@ public class DateUtill {
 	        System.out.println(formattedDate);
 			return formattedDate;
 	    }
-	
+	 public static LocalDate convertStringToDateFormat(String date) {
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+			return LocalDate.parse(date, formatter);
+		}
 }

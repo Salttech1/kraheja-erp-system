@@ -93,4 +93,6 @@ public interface EntityRepository extends JpaRepository<DbEntity, EntityCK>{
 	@Query("SELECT NVL(e.entRemark,'') FROM DbEntity e WHERE trim(e.entityCk.entClass)=:entClass AND trim(e.entityCk.entId)=:entId")
 	public String findEntRemarkByEntityCk_EntClassAndEntityCk_EntId(String entClass, String entId);
 
+	@Query("select count(e) from DbEntity e where e.entityCk.entClass = 'STATE' and e.entityCk.entId= :state and e.entityCk.entChar3= 'U'")
+	Integer getEntityCount(String state);
 }

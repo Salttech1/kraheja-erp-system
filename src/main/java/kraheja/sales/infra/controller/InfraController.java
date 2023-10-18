@@ -19,25 +19,32 @@ public class InfraController {
 	@Autowired
 	private InfraService infraService;
 
-
 	@PostMapping("/add-into-infra-defaulters-list-temp-table")
-	public ResponseEntity<?> addIntoInfraDefaultersListTempTable(@RequestBody InfraDefaultersListRequestBean infraDefaultersListRequestBean){
-		return this.infraService.addIntoInfraDefaultersListTempTable(infraDefaultersListRequestBean); 
+	public ResponseEntity<?> addIntoInfraDefaultersListTempTable(
+			@RequestBody InfraDefaultersListRequestBean infraDefaultersListRequestBean) {
+		return this.infraService.addIntoInfraDefaultersListTempTable(infraDefaultersListRequestBean);
 	}
-	
+
 	@DeleteMapping("/delete-infra-defaulters-list-from-sessionId")
 	public ResponseEntity<?> truncateTempTable(Integer sessionId) {
 		return this.infraService.deleteInfraDefaultersListFromSessionId(sessionId);
 	}
-	
+
 	@GetMapping("/fetch-infra-gst-flag")
-	public ResponseEntity<?> fetchGstFlag(String recNum){
+	public ResponseEntity<?> fetchGstFlag(String recNum) {
 		return this.infraService.fetchGstFlag(recNum);
 	}
 
 	@GetMapping("/fetch-infra-car-parks")
-	public ResponseEntity<?> fetchCarParks(String bldgCode , String wing, String flatNo){
-		return this.infraService.fetchCarParks(bldgCode , wing, flatNo);
+	public ResponseEntity<?> fetchCarParks(String bldgCode, String wing, String flatNo) {
+		return this.infraService.fetchCarParks(bldgCode, wing, flatNo);
 
-}	
+	}
+
+	@GetMapping("/fetch-infra-advance-flag")
+	public ResponseEntity<?> fetchAdvanceFlag(String bldgCode, String wing, String flatNo, String recNum,
+			String gstYN) {
+		return this.infraService.fetchAdvanceFlag(bldgCode, wing, flatNo, recNum, gstYN);
+
+	}
 }
