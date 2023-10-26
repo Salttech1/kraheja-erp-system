@@ -95,4 +95,7 @@ public interface EntityRepository extends JpaRepository<DbEntity, EntityCK>{
 
 	@Query("select count(e) from DbEntity e where e.entityCk.entClass = 'STATE' and e.entityCk.entId= :state and e.entityCk.entChar3= 'U'")
 	Integer getEntityCount(String state);
+	
+	@Query(value ="select nvl(ent_num1, 0) from entity where ent_class = '#OGIN' and ent_id = '#OGIN' and ent_char1='Q'", nativeQuery = true)
+	double fetchIntereRate();
 }

@@ -53,7 +53,7 @@ public class AuxilaryServiceImpl implements AuxilaryService {
 			log.debug("strStartDate : {}", strStartDate);
 
 			if (strStartDate.isEmpty() || strStartDate == null) {
-				strStartDate = startYearMonthFromInput(request.getDate());
+				strStartDate = DateUtill.startYearMonthFromInput(request.getDate());
 			}
 		} else {
 			
@@ -91,25 +91,7 @@ public class AuxilaryServiceImpl implements AuxilaryService {
 		return outrateRepository.fetchStartDate(buildingCode, wing, flatNum, billType);
 	}
 
-	private String startYearMonthFromInput(String receiptDate) {
-		String strYear = "";
-		String strMonth = "";
-		String strYearMonth = "";
-
-		if (!receiptDate.isEmpty()) {
-			strYear = receiptDate.substring(6, 10);
-			strMonth = receiptDate.substring(3, 5);
-			strYearMonth = strYear + strMonth;
-		} else {
-			SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
-			receiptDate = dateFormat.format(new Date());
-			strYear = receiptDate.substring(6, 10);
-			strMonth = receiptDate.substring(3, 5);
-			strYearMonth = strYear + strMonth;
-		}
-
-		return strYearMonth;
-	}
+	
 
 	public List<GridResponse> taxCalculation(AuxilaryRequest request) {
 		List<GridResponse> insertRowList = new ArrayList<>();
@@ -360,7 +342,7 @@ public class AuxilaryServiceImpl implements AuxilaryService {
 					igstPerc, narration);
 			insertRowList.add(response);
 
-			date = increaseMonth(date);
+			date = DateUtill.increaseMonth(date);
 		}
 
 		return insertRowList;
@@ -379,14 +361,5 @@ public class AuxilaryServiceImpl implements AuxilaryService {
 
 	}
 
-	private String increaseMonth(String month) {
-		// Parse the input string to a YearMonth object
-		YearMonth inputYearMonth = YearMonth.parse(month, DateTimeFormatter.ofPattern("yyyyMM"));
 
-		// Add one month to the YearMonth
-		YearMonth newYearMonth = inputYearMonth.plusMonths(1);
-
-		// Format the new YearMonth back to the YYYYMM format
-		return newYearMonth.format(DateTimeFormatter.ofPattern("yyyyMM"));
-	}
 }

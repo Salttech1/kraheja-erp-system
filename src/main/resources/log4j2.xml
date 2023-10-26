@@ -11,7 +11,7 @@
 			<PatternLayout pattern="${PATTERN}" />
 		</Console>
 
-		<RollingFile name="file-api" fileName="${LOG_DIR}/kraheja.log" filePattern="${LOG_DIR}/$${date:yyyy-MM}/kraheja-%d{MM-dd-yyyy}.log.gz" ignoreExceptions="false">
+		<RollingFile name="file-api" fileName="${LOG_DIR}/api.log" filePattern="${LOG_DIR}/$${date:yyyy-MM}/api-%d{MM-dd-yyyy}.log.gz" ignoreExceptions="false">
 			<PatternLayout>
 				<Pattern>${PATTERN}</Pattern>
 			</PatternLayout>
@@ -21,29 +21,6 @@
 			</Policies>
 			<DefaultRolloverStrategy max="5" />
 		</RollingFile>
-		
-		<RollingFile name="spring-transaction" fileName="${LOG_DIR}/transaction.log" filePattern="${LOG_DIR}/$${date:yyyy-MM}/transaction-%d{MM-dd-yyyy}.log.gz" ignoreExceptions="false">
-			<PatternLayout>
-				<Pattern>${PATTERN}</Pattern>
-			</PatternLayout>
-
-			<Policies>
-				<TimeBasedTriggeringPolicy interval="1"/>
-			</Policies>
-			<DefaultRolloverStrategy max="5" />
-		</RollingFile>
-		
-		<RollingFile name="file-jdbcpool" fileName="${LOG_DIR}/jdbc.log" filePattern="${LOG_DIR}/$${date:yyyy-MM}/jdbc-%d{MM-dd-yyyy}.log.gz" ignoreExceptions="false">
-			<PatternLayout>
-				<Pattern>${PATTERN}</Pattern>
-			</PatternLayout>
-
-			<Policies>
-				<TimeBasedTriggeringPolicy interval="1"/>
-			</Policies>
-			<DefaultRolloverStrategy max="5" />
-		</RollingFile>
-		
 	</Appenders>
 
 	<Loggers>
@@ -51,12 +28,7 @@
 			<AppenderRef ref="file-api" />
 			<AppenderRef ref="console" />
 		</Logger>
-		
-		<Logger name="org.springframework.transaction" level="debug" additivity="false" includeLocation="true">
-			<AppenderRef ref="spring-transaction" />
-			<AppenderRef ref="console" />
-		</Logger>
-		
+
 		<Root level="info" includeLocation="true">
 			<AppenderRef ref="file-api" />
 			<AppenderRef ref="console" />

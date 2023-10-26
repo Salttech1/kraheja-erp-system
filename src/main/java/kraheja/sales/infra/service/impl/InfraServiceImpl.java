@@ -265,26 +265,26 @@ public class InfraServiceImpl implements InfraService {
 			Query query;
 
 			query = this.entityManager
-					.createNativeQuery("select max(infr_invoiceno) from infrbill where infr_bldgcode='" + bldgCode
+					.createNativeQuery("select nvl(max(infr_invoiceno),'A') from infrbill where infr_bldgcode='" + bldgCode
 							+ "' and infr_wing = '" + wing + "' and infr_flatnum = '" + flatNo + "'");
 
 			strLocBillNum = String.valueOf(query.getSingleResult());
 			LOGGER.info("Bill_Invoice No: {} ", strLocBillNum);
 
-			if (strLocBillNum == "" || Objects.isNull(strLocBillNum) || strLocBillNum.isEmpty()) {
+			if ((strLocBillNum.equalsIgnoreCase("A")) || Objects.isNull(strLocBillNum) || strLocBillNum.isEmpty()) {
 				strLocBillNum = "ADVANCE";
 				strLocBillDate = "";
 			} else {
 				// if billnumber is there
 				query = this.entityManager.createNativeQuery(
-						"select SUM(nvl(infr_BILLAMT,0) + nvl(infr_ARREARS,0) + nvl(infr_admincharges,0) + nvl(infr_cgst,0) + nvl(infr_sgst,0) + nvl(infr_igst,0)) from infrbill where infr_bldgcode='"
+						"select nvl(SUM(nvl(infr_BILLAMT,0) + nvl(infr_ARREARS,0) + nvl(infr_admincharges,0) + nvl(infr_cgst,0) + nvl(infr_sgst,0) + nvl(infr_igst,0)),0) from infrbill where infr_bldgcode='"
 								+ bldgCode + "' and infr_wing = '" + wing + "' and infr_flatnum = '" + flatNo
 								+ "' and infr_invoiceno = '" + strLocBillNum + "'");
 
 				Strlocarrears = String.valueOf(query.getSingleResult());
 				LOGGER.info("String arrears: {} ", Strlocarrears);
 
-				if (Strlocarrears == "" || Objects.isNull(Strlocarrears) || Strlocarrears.isEmpty()) {
+				if ((Strlocarrears.equalsIgnoreCase("0")) || Objects.isNull(Strlocarrears) || Strlocarrears.isEmpty()) {
 					intlocarrears = 0;
 				} else {
 					intlocarrears = Integer.valueOf(Strlocarrears);
@@ -301,13 +301,13 @@ public class InfraServiceImpl implements InfraService {
 					strLocBillDate = strLocBillDate.substring(8, 10) + "-" + strLocBillDate.substring(5,7) + "-" + strLocBillDate.substring(0, 4);
 
 					query = this.entityManager.createNativeQuery(
-							"select SUM(nvl(inf_AMTPAID,0) + nvl(inf_admincharges,0) + nvl(inf_cgst,0) + nvl(inf_sgst,0) + nvl(inf_igst,0)) from outinfra where inf_bldgcode='"
+							"select nvl(SUM(nvl(inf_AMTPAID,0) + nvl(inf_admincharges,0) + nvl(inf_cgst,0) + nvl(inf_sgst,0) + nvl(inf_igst,0)),0) from outinfra where inf_bldgcode='"
 									+ bldgCode + "' and inf_wing = '" + wing + "' and inf_flatnum = '" + flatNo
 									+ "' and inf_recdate > to_date('" + strLocBillDate
 									+ "','dd/mm/yyyy') and inf_recnum <> '" + recNum + "' and inf_cancelledyn = 'N'");
 					Strlocpaid = String.valueOf(query.getSingleResult());
 
-					if (Strlocpaid == "" || Objects.isNull(Strlocpaid) || Strlocpaid.isEmpty()) {
+					if ((Strlocpaid.equalsIgnoreCase("0")) || Objects.isNull(Strlocpaid) || Strlocpaid.isEmpty()) {
 						intlocpaid = 0;
 					} else {
 						intlocpaid = Integer.valueOf(Strlocpaid);
@@ -324,26 +324,26 @@ public class InfraServiceImpl implements InfraService {
 			Query query;
 
 			query = this.entityManager
-					.createNativeQuery("select max(infr_billnum) from infrbill where infr_bldgcode='" + bldgCode
+					.createNativeQuery("select nvl(max(infr_billnum),'A') from infrbill where infr_bldgcode='" + bldgCode
 							+ "' and infr_wing = '" + wing + "' and infr_flatnum = '" + flatNo + "'");
 
 			strLocBillNum = String.valueOf(query.getSingleResult());
 			LOGGER.info("Bill_Invoice No: {} ", strLocBillNum);
 
-			if (strLocBillNum == "" || Objects.isNull(strLocBillNum) || strLocBillNum.isEmpty()) {
+			if ((strLocBillNum.equalsIgnoreCase("A")) || Objects.isNull(strLocBillNum) || strLocBillNum.isEmpty()) {
 				strLocBillNum = "ADVANCE";
 				strLocBillDate = "";
 			} else {
 				// if billnumber is there
 				query = this.entityManager.createNativeQuery(
-						"select SUM(nvl(infr_BILLAMT,0) + nvl(infr_ARREARS,0) + nvl(infr_admincharges,0) + nvl(infr_servtax,0) + nvl(infr_swachhcess,0) + nvl(infr_krishicess,0)) from infrbill where infr_bldgcode='"
+						"select nvl(SUM(nvl(infr_BILLAMT,0) + nvl(infr_ARREARS,0) + nvl(infr_admincharges,0) + nvl(infr_servtax,0) + nvl(infr_swachhcess,0) + nvl(infr_krishicess,0)),0) from infrbill where infr_bldgcode='"
 								+ bldgCode + "' and infr_wing = '" + wing + "' and infr_flatnum = '" + flatNo
 								+ "' and infr_billnum = '" + strLocBillNum + "'");
 
 				Strlocarrears = String.valueOf(query.getSingleResult());
 				LOGGER.info("String arrears: {} ", Strlocarrears);
 
-				if (Strlocarrears == "" || Objects.isNull(Strlocarrears) || Strlocarrears.isEmpty()) {
+				if ((Strlocarrears.equalsIgnoreCase("0")) || Objects.isNull(Strlocarrears) || Strlocarrears.isEmpty()) {
 					intlocarrears = 0;
 				} else {
 					intlocarrears = Integer.valueOf(Strlocarrears);
@@ -360,14 +360,14 @@ public class InfraServiceImpl implements InfraService {
 					strLocBillDate = strLocBillDate.substring(8, 10) + "-" + strLocBillDate.substring(5,7) + "-" + strLocBillDate.substring(0, 4);
 
 					query = this.entityManager.createNativeQuery(
-							"select SUM(nvl(inf_AMTPAID,0) + nvl(inf_admincharges,0) + nvl(inf_servtax,0) + nvl(inf_swachhcess,0) + nvl(inf_krishicess,0)) from outinfra where inf_bldgcode='"
+							"select nvl(SUM(nvl(inf_AMTPAID,0) + nvl(inf_admincharges,0) + nvl(inf_servtax,0) + nvl(inf_swachhcess,0) + nvl(inf_krishicess,0)),0) from outinfra where inf_bldgcode='"
 									+ bldgCode + "' and inf_wing = '" + wing + "' and inf_flatnum = '" + flatNo
 									+ "' and inf_recdate > to_date('" + strLocBillDate
 									+ "','dd/mm/yyyy') and inf_recnum <> '" + recNum + "' and inf_cancelledyn = 'N'");
 
 					Strlocpaid = String.valueOf(query.getSingleResult());
 
-					if (Strlocpaid == "" || Objects.isNull(Strlocpaid) || Strlocpaid.isEmpty()) {
+					if ((Strlocpaid.equalsIgnoreCase("0")) || Objects.isNull(Strlocpaid) || Strlocpaid.isEmpty()) {
 						intlocpaid = 0;
 					} else {
 						intlocpaid = Integer.valueOf(Strlocpaid);
