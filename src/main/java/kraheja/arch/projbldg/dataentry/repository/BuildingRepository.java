@@ -26,5 +26,11 @@ public interface BuildingRepository extends JpaRepository<Building, BuildingCK> 
 	
 	@Query("select b.bldgSalesstate from Building b where b.buildingCK.bldgCode= :bldgCode")
 	String findBldgSalesstateByBuildingCK_BldgCode(String bldgCode);
+	
+	@Query("select b.bldgCity from Building b where b.buildingCK.bldgCode= :bldgCode")
+	String findBldgCityByBuildingCK_BldgCode(String bldgCode);
+	
+	@Query("select b.bldgCoy from Building b where b.buildingCK.bldgCode= :bldgCode")
+	String findBldgCompanyByBldgCode(String bldgCode);
 
 }

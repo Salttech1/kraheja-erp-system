@@ -164,4 +164,6 @@ public class Party implements Serializable {
 	@Column(name="PAR_VATNUM")
 	private String parVatnum;
 
+	@Column(name="PAR_AADHARPANLINKEDYN")
+	private String parAadharPanLinkedYN;
 }

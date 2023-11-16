@@ -115,4 +115,5 @@ public class PartyRequestBean {
 	
 	private Date vatcanceldt;
 
+	private String aadharpanlinkedyn;
 }

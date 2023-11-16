@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import kraheja.adminexp.billing.dataentry.adminAdvancePayment.bean.request.AdmadvanceRequestBean;
 import kraheja.adminexp.billing.dataentry.adminAdvancePayment.bean.response.AdmAdvancePaymentFetchResponse;
 import kraheja.adminexp.billing.dataentry.adminAdvancePayment.bean.response.GenericResponse;
+import kraheja.adminexp.billing.dataentry.adminAdvancePayment.entity.Admadvance1;
 import kraheja.adminexp.billing.dataentry.adminAdvancePayment.service.AdminAdvancePaymentPassingService;
 import lombok.extern.log4j.Log4j2;
 
@@ -28,7 +29,7 @@ public class AdmAdvancePaymentPassingController {
 	private AdminAdvancePaymentPassingService adminAdvanceBillPaymentPassingService;
 
 	@GetMapping("/fetch-admadvance-bill-by-Pinv-and-Ser")
-	public GenericResponse<AdmAdvancePaymentFetchResponse> fetchAdmadvanceBySer(@RequestParam(value = "pinv") String pinv,
+	public GenericResponse<Admadvance1> fetchAdmadvanceBySer(@RequestParam(value = "pinv") String pinv,
 			@RequestParam(value = "ser") String ser) {
 		log.info("In Admin Advance Payment Passing Fetch Method");
 		log.info("ser :: {} , pinv :: {}",ser,pinv);
@@ -37,10 +38,12 @@ public class AdmAdvancePaymentPassingController {
 	}
 	
 	@PutMapping("/update-admadvance-bill")
-	public GenericResponse<Void> updateAdmadvance(@Valid @RequestBody AdmadvanceRequestBean admAdvanceRequestBean)
+	public GenericResponse<Void> updateAdmadvance(@Valid @RequestBody String ser)
 			throws ParseException {
 		log.info("In Admin Advance Payment Update Method");
-		return this.adminAdvanceBillPaymentPassingService.updateAdmadvance(admAdvanceRequestBean);
+		 ser = ser.trim().replace("\"", "");
+		 log.info("ser : {} ", ser);
+		return this.adminAdvanceBillPaymentPassingService.updateAdmadvance(ser);
 
 	}
 	

@@ -53,7 +53,7 @@ public class ApplicationExceptionConfiguration extends ResponseEntityExceptionHa
 				.result(Result.FAILED)
 				.responseCode(ApiResponseCode.INETNAL_SERVER_ERROR)
 				.build(),
-				HttpStatus.INTERNAL_SERVER_ERROR);
+				HttpStatus.OK);
 	}
 
 	/**

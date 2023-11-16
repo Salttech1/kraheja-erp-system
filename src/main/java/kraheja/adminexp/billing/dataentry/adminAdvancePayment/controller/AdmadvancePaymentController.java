@@ -5,7 +5,6 @@ import java.text.ParseException;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -18,7 +17,6 @@ import kraheja.adminexp.billing.dataentry.adminAdvancePayment.bean.request.Admad
 import kraheja.adminexp.billing.dataentry.adminAdvancePayment.bean.response.AdmadvanceResponseBean;
 import kraheja.adminexp.billing.dataentry.adminAdvancePayment.bean.response.GenericResponse;
 import kraheja.adminexp.billing.dataentry.adminAdvancePayment.service.AdminAdvanceBillPaymentService;
-import kraheja.adminexp.billing.dataentry.bean.request.AdmbillhRequestBean;
 import lombok.extern.log4j.Log4j2;
 
 @RestController

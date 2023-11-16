@@ -482,5 +482,125 @@ public class ReportParametersServiceImpl implements ReportParametersService {
 		}
 		return ResponseEntity.ok(ServiceResponseBean.builder().status(Boolean.FALSE).message("Error while creating report.").build());
 	}
+
+	
+	@Override
+	public ResponseEntity<?> empwiseMonthlySummaryPT(String coyCode, String deptCodes, String empCodes,
+			String salaryTypes, String paymonth, String paymentDate,  String empType ) {
+		String sqlQuery = "", sqlQuery1a = "", sqlQuery1b = "" , sqlQueryFull = "" ,hotelPropYN ;
+		
+		sqlQuery1a = "select * from (\r\n"
+				+ "						select 	empl_code, paymonth, employee, gender, age, dept as desg, pr, ab, enc, edcd, sum(earndedamt) Amt\r\n"
+				+ "						from 		v_empwisemthsummptnew where 1 = 1 " ;
+		
+			if(StringUtils.isAllBlank(coyCode)) {
+				// do nothing as there is nothing to concatenate to main query
+			}
+			else
+			{
+				sqlQuery = sqlQuery + " and ('ALL'  = '" + coyCode +"'  OR co = '"+ coyCode + "') " ;
+			}	
+			if(StringUtils.isAllBlank(deptCodes) )  {
+				// do nothing as there is nothing to concatenate to main query
+			}
+			else
+			{
+				sqlQuery = sqlQuery + " and (( 'ALL') in (" + deptCodes + ") OR dept in (" + deptCodes + ")) ";
+			}
+			if(StringUtils.isAllBlank(empCodes)) {
+				// do nothing as there is nothing to concatenate to main query
+			}
+			else
+			{
+				sqlQuery = sqlQuery + " and (( 'ALL') in (" + empCodes + ") OR empl_code in (" + empCodes + ")) ";
+			}	
+			if(StringUtils.isAllBlank(salaryTypes)) {
+				// do nothing as there is nothing to concatenate to main query
+			}
+			else
+			{
+				sqlQuery = sqlQuery + " and (( 'ALL') in (" + salaryTypes + ") OR salarytype in (" + salaryTypes + ")) ";
+			}	
+			if(StringUtils.isAllBlank(paymonth)) {
+				// do nothing as there is nothing to concatenate to main query
+			}
+			else
+			{
+				sqlQuery = sqlQuery + " and ('ALL' = '" + paymonth + "'  OR paymonth = '" + paymonth + "') " ;
+			}
+			// Need to add a condition for hotel property
+			hotelPropYN = reportParametersRepository.GetHotelPropYN() ;
+			logger.info("hotelPropYN :: {}", hotelPropYN);
+			
+			if(StringUtils.equals(hotelPropYN, "Y")) {
+				if(StringUtils.isAllBlank(empType)) {
+					// do nothing as there is nothing to concatenate to main query
+				}
+				else
+				{
+					sqlQuery = sqlQuery + " and ejin_emptype = '" + empType + "' " ;
+				}
+			}
+
+			if(StringUtils.isAllBlank(paymentDate)) {
+				// do nothing as there is nothing to concatenate to main query
+			}
+			else
+			{
+				sqlQuery = sqlQuery + " and EMPM_PAYDATE = to_date('" + paymentDate.toString() + "','dd/mm/yyyy')" ;
+			}	
+			
+			
+			sqlQuery1b = "						group by empl_code,  paymonth, employee, gender, age, dept , pr, ab, enc, edcd\r\n"
+					+ "						having	sum(earndedamt) > 0\r\n"
+					+ "					) \r\n"
+					+ "						pivot( sum(amt)  for edcd in (\r\n"
+					+ "																'BASIC' BASIC,\r\n"
+					+ "																'HRA' HRA,\r\n"
+					+ "																'TA' TA,\r\n"
+					+ "																'SOCA' SOCA,\r\n"
+					+ "																'CA' CA,\r\n"
+					+ "																'GROSS' GROSS,\r\n"
+					+ "																'PT' PT,\r\n"
+					+ "																'ESIC' ESIC, \r\n"
+					+ "																'IT' IT,\r\n"
+					+ "																'PF' PF,\r\n"
+					+ "																'VPF' VPF,\r\n"
+					+ "																'BLOAN' BLOAN,\r\n"
+					+ "																'CLOAN' CLOAN,\r\n"
+					+ "																'OTHDED' OTHDED,\r\n"
+					+ "																'NETPAY' NETPAY,\r\n"
+					+ "																'MEDICAL' MEDICAL, \r\n"
+					+ "																'ATTIRE' ATTIRE, \r\n"
+					+ "																'UNIFORM' UNIFORM, \r\n"
+					+ "																'LTA' LTA,\r\n"
+					+ "																'GRATUITY' GRATUITY, \r\n"
+					+ "																'LEAVEENC' LEAVEENC, \r\n"
+					+ "																'BONUS' BONUS,\r\n"
+					+ "																'EXGRATIA' EXGRATIA, \r\n"
+					+ "																'CONVRIEMB' CONVRIEMB, \r\n"
+					+ "																'ENTA' ENTA, \r\n"
+					+ "																'NOTPAYRECO' NOTPAYRECO,\r\n"
+					+ "																'NOTICEPAY' NOTICEPAY,\r\n"
+					+ "																'ADVRECO' ADVRECO \r\n"
+					+ "																) \r\n"
+					+ "				)\r\n"
+					+ "" ;
+			
+			sqlQueryFull = sqlQuery1a + sqlQuery + sqlQuery1b ;
+		try {
+			logger.info("sqlQuery :: {}", sqlQueryFull);
+			File excelFile = ExcelUtils.INSTANCE.export(sqlQueryFull, dbUrl, dbUsername, dbPassword);
+
+			String fileName = CommonConstraints.INSTANCE.DD_MM_YYYY_HH_MM_SS_FORMATTER.format(LocalDateTime.now()).concat(CommonConstraints.INSTANCE.XLS_EXTENSION);
+			return ResponseEntity.ok()
+					.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName)
+					.header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_OCTET_STREAM_VALUE)
+					.body(new InputStreamResource(new FileInputStream(excelFile)));
+		} catch (FileNotFoundException e) {
+		}
+		return ResponseEntity.ok(ServiceResponseBean.builder().status(Boolean.FALSE).message("Error while creating report.").build());
+	}
+	
 	
 }

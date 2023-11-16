@@ -278,7 +278,8 @@ public enum ExcelUtils {
 		    }
 		}
 		
-		Row headerRow = sheet.createRow(5);
+		//Row headerRow = sheet.createRow(5);
+		Row headerRow = sheet.createRow(0);
 
 		// exclude the first column which is the ID field
 		for (int i = 1; i <= numberOfColumns; i++) {
@@ -369,9 +370,7 @@ public enum ExcelUtils {
 					cell.setCellValue((String) valueObject);
 				}
 			}
-
 		}
-		
 	}
 	
 	private void writeDataLines(ResultSet result, HSSFWorkbook workbook, HSSFSheet sheet) throws SQLException {
@@ -379,7 +378,8 @@ public enum ExcelUtils {
 		int numberOfColumns = metaData.getColumnCount();
 		CellStyle style = workbook.createCellStyle();
 		DataFormat dataFormat = workbook.createDataFormat();
-		int rowCount = 5;
+		//int rowCount = 5;
+		int rowCount = 1;
 
 		while (result.next()) {
 			Row row = sheet.createRow(rowCount++);
@@ -413,7 +413,6 @@ public enum ExcelUtils {
 					cell.setCellValue((String) valueObject);
 				}
 			}
-
 		}
 	}
 

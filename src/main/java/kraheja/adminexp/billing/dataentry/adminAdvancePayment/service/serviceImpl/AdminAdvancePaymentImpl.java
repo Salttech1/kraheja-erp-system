@@ -33,16 +33,15 @@ public class AdminAdvancePaymentImpl implements AdminAdvanceBillPaymentService {
 		try {
 			if (admadvanceEntity != null) {
 
-				Long status = Long.parseLong(admadvanceEntity.getAdvnStatus());
-
-				if (Objects.nonNull(status) && (status == 5 || status == 7)) {
+				if (Objects.nonNull(admadvanceEntity.getAdvnStatus())) {
 					return new GenericResponse<>(false,
 							"You can't modify this bill. This bill is already passed/paid.");
-				} else {
+				} 
+				
 					AdmadvanceResponseBean admadvanceResponseBean = AdmadvanceEntityPojoMapper.fetchAdmadvanceEntityPojoMapper
 							.apply(new Object[] { admadvanceEntity });
 					return new GenericResponse<>(true, "Data fetched successfully", admadvanceResponseBean);
-				}
+				
 			}
 			return new GenericResponse<>(false, "No record found for your selections in Admadvance");
 		} catch (NumberFormatException nfe) {
@@ -78,9 +77,17 @@ public class AdminAdvancePaymentImpl implements AdminAdvanceBillPaymentService {
 
 		if (admadvanceEntity != null) {
 
-			Long status = Long.parseLong(admadvanceEntity.getAdvnStatus());
+			Long status;
+			String advnStatus = admadvanceEntity.getAdvnStatus();
+			
+			if(advnStatus==null) {
+				status=0L;
+			}
+			else {
+				status = Long.parseLong(admadvanceEntity.getAdvnStatus());
+			}
 
-			if (Objects.nonNull(status) && (status == 5 || status == 7)) {
+			if  (status == 5 || status == 7) {
 
 				return new GenericResponse<>(false, "You can't modify this bill. This bill is already passed/paid.");
 

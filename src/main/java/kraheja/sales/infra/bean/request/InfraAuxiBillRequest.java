@@ -1,5 +1,7 @@
 package kraheja.sales.infra.bean.request;
 
+import java.time.LocalDateTime;
+
 import javax.validation.constraints.NotEmpty;
 
 import lombok.AllArgsConstructor;
@@ -16,9 +18,15 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 public class InfraAuxiBillRequest {
-	@NotEmpty private String chargeCode;
-	@NotEmpty private String billType;
-	@NotEmpty private String ownerIdFrom;
-	@NotEmpty private String ownerIdTo;
-	@NotEmpty private String billDate;
+	@NotEmpty
+	private String chargeCode;
+	@NotEmpty
+	private String billType;
+	@NotEmpty
+	private String ownerIdFrom;
+	@NotEmpty
+	private String ownerIdTo;
+	private LocalDateTime billRecDate;
+	private String billDate;
+
 }

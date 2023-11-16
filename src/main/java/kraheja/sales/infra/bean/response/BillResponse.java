@@ -1,5 +1,7 @@
 package kraheja.sales.infra.bean.response;
 
+import java.time.LocalDate;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
@@ -22,20 +24,21 @@ public class BillResponse extends GenericResponse{
 	private String billNumber;
 	private String ownerId;
 	private String month;
-	private String billDate;
-	private String billFromDate;
-	private String billToDate;
-	private String billAmount;
-	private String billArrears;
-	private String interest;
-	private String interestArrears;
-	private String admin;
-	private String cgst;
-	private String sgst;
-	private String igst;
-	private String cgstPerc;
-	private String sgstPerc;
-	private String igstPerc;
+	private LocalDate billDate;
+	private LocalDate billFromDate;
+	private LocalDate billToDate;
+	private double billAmount;
+	private double billArrears;
+	private double interest;
+	private double interestArrears;
+	private double admin;
+	private double cgst;
+	private double sgst;
+	private double igst;
+	private double cgstPerc;
+	private double sgstPerc;
+	private double igstPerc;
 	private String invoiceNumber;
 	private String irnno;
+	private String sessionId;
 }

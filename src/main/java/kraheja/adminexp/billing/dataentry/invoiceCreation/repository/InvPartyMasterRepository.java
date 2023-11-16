@@ -1,12 +1,12 @@
-package kraheja.adminexp.billing.dataentry.repository;
+package kraheja.adminexp.billing.dataentry.invoiceCreation.repository;
 
 
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import kraheja.adminexp.billing.dataentry.entity.Invpartymaster;
-import kraheja.adminexp.billing.dataentry.entity.InvpartymasterCK;
+import kraheja.adminexp.billing.dataentry.invoiceCreation.entity.Invpartymaster;
+import kraheja.adminexp.billing.dataentry.invoiceCreation.entity.InvpartymasterCK;
 import org.springframework.data.jpa.repository.Query;
 
 public interface InvPartyMasterRepository extends JpaRepository<Invpartymaster, Long> {

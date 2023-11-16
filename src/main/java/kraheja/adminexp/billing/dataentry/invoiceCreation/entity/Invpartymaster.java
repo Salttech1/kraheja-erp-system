@@ -1,4 +1,4 @@
-package kraheja.adminexp.billing.dataentry.entity;
+package kraheja.adminexp.billing.dataentry.invoiceCreation.entity;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import javax.persistence.Column;

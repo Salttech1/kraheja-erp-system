@@ -65,7 +65,7 @@ public interface AdmadvanceEntityPojoMapper {
 					.advnGstperc(
 							Objects.nonNull(admadvanceRequestBean.getGstperc()) ? admadvanceRequestBean.getGstperc()
 									: BigInteger.ZERO.doubleValue())
-					.advnNarration(admadvanceRequestBean.getNarration()).advnOrderby(admadvanceRequestBean.getOrderby())
+					.advnNarration(admadvanceRequestBean.getNarration().toUpperCase()).advnOrderby(admadvanceRequestBean.getOrderby().toUpperCase())
 					.advnOrigsite(GenericAuditContextHolder.getContext().getSite())
 					.advnPaidamount(Objects.nonNull(admadvanceRequestBean.getPaidamount())
 							? admadvanceRequestBean.getPaidamount()
@@ -83,10 +83,11 @@ public interface AdmadvanceEntityPojoMapper {
 									: null)
 					.advnPinvno(admadvanceRequestBean.getPinvno()).advnProject(admadvanceRequestBean.getProject())
 					.advnSite(GenericAuditContextHolder.getContext().getSite())
-					.advnStatus(admadvanceRequestBean.getStatus()).advnTdsacmajor(admadvanceRequestBean.getTdsacmajor())
+					.advnStatus(null)
 					.advnTdsamount(
 							Objects.nonNull(admadvanceRequestBean.getTdsamount()) ? admadvanceRequestBean.getTdsamount()
 									: BigInteger.ZERO.doubleValue())
+					.advnTdsacmajor(Objects.nonNull(admadvanceRequestBean.getTdsacmajor())? admadvanceRequestBean.getTdsacmajor():null)
 					.advnTdsperc(
 							Objects.nonNull(admadvanceRequestBean.getTdsperc()) ? admadvanceRequestBean.getTdsperc()
 									: BigInteger.ZERO.doubleValue())
@@ -130,10 +131,10 @@ public interface AdmadvanceEntityPojoMapper {
 				.setAdvnGstperc(Objects.nonNull(admadvanceRequestBean.getGstperc()) ? admadvanceRequestBean.getGstperc()
 						: admadvanceEntity.getAdvnGstperc());
 		admadvanceEntity.setAdvnNarration(
-				Objects.nonNull(admadvanceRequestBean.getNarration()) ? admadvanceRequestBean.getNarration().trim()
+				Objects.nonNull(admadvanceRequestBean.getNarration()) ? admadvanceRequestBean.getNarration().trim().toUpperCase()
 						: admadvanceEntity.getAdvnNarration());
 		admadvanceEntity.setAdvnOrderby(
-				Objects.nonNull(admadvanceRequestBean.getOrderby()) ? admadvanceRequestBean.getOrderby().trim()
+				Objects.nonNull(admadvanceRequestBean.getOrderby()) ? admadvanceRequestBean.getOrderby().trim().toUpperCase()
 						: admadvanceEntity.getAdvnOrderby());
 		admadvanceEntity.setAdvnOrigsite(GenericAuditContextHolder.getContext().getSite());
 		admadvanceEntity.setAdvnPaidamount(
@@ -164,9 +165,7 @@ public interface AdmadvanceEntityPojoMapper {
 				Objects.nonNull(admadvanceRequestBean.getProject()) ? admadvanceRequestBean.getProject().trim()
 						: admadvanceEntity.getAdvnProject());
 		admadvanceEntity.setAdvnSite(GenericAuditContextHolder.getContext().getSite());
-		admadvanceEntity.setAdvnStatus(
-				Objects.nonNull(admadvanceRequestBean.getStatus()) ? admadvanceRequestBean.getStatus().trim()
-						: admadvanceEntity.getAdvnStatus());
+		admadvanceEntity.setAdvnStatus(null);
 		admadvanceEntity.setAdvnTdsacmajor(
 				Objects.nonNull(admadvanceRequestBean.getTdsacmajor()) ? admadvanceRequestBean.getTdsacmajor().trim()
 						: admadvanceEntity.getAdvnTdsacmajor());

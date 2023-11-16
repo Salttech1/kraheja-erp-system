@@ -2,8 +2,6 @@ package kraheja.sales.infra.controller;
 
 import java.text.ParseException;
 
-import javax.validation.Valid;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -11,11 +9,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import kraheja.payload.GenericResponse;
+import jakarta.validation.Valid;
 import kraheja.sales.bean.request.AuxilaryRequest;
 import kraheja.sales.bean.request.InchequeRequest;
 import kraheja.sales.bean.request.OutinfraRequestBean;
@@ -27,6 +26,7 @@ import kraheja.sales.infra.service.AuxilaryService;
 import kraheja.sales.infra.service.AuxiliaryPersistanceService;
 import kraheja.sales.infra.service.BillGenerationService;
 import kraheja.sales.infra.service.OutinfraService;
+import kraheja.sales.infra.service.PrintBillService;
 import lombok.extern.log4j.Log4j2;
  
 @Log4j2
@@ -37,9 +37,10 @@ public class OutinfraController {
 	@Autowired
 	private OutinfraService outinfraService;
 	
-	@Autowired AuxiliaryPersistanceService auxiPersistanceService;
-	@Autowired AuxilaryService auxilaryService;
-	@Autowired BillGenerationService billGenerationService;
+	@Autowired private AuxiliaryPersistanceService auxiPersistanceService;
+	@Autowired private AuxilaryService auxilaryService;
+	@Autowired private BillGenerationService billGenerationService;
+	@Autowired private PrintBillService printBillService;
 	
 	//following function will fetch data of flatowner. 
 	
@@ -143,11 +144,12 @@ public class OutinfraController {
 			@RequestParam String wing,
 			@RequestParam String flatNumber, 
 			@RequestParam String chargeCode,
+			@RequestParam String billType,
 			@RequestBody InchequeRequest inchequeRequest){
 		
-		log.debug("post/request/outinfra/saveIncheqe buildingCode : {} wing:{} flatNumber: {} chargeCode: {} inchequeRequest: {}", buildingCode, wing, flatNumber, chargeCode, inchequeRequest);
+		log.debug("post/request/outinfra/saveIncheqe buildingCode : {} wing:{} flatNumber: {} chargeCode: {} billType: {} inchequeRequest: {}", buildingCode, wing, flatNumber, chargeCode, billType, inchequeRequest);
 		
-		InchequeResponse response = auxiPersistanceService.saveIncheqe(buildingCode, wing, flatNumber, chargeCode, inchequeRequest);
+		InchequeResponse response = auxiPersistanceService.saveIncheqe(buildingCode, wing, flatNumber, chargeCode,billType, inchequeRequest);
 		log.debug("post/response/saveIncheqe : {}",response);
 		
 		return ResponseEntity.ok(response);
@@ -161,6 +163,22 @@ public class OutinfraController {
 		log.debug("post/response/getBill : {}",response);
 		
 		return ResponseEntity.ok(response);
+		
+	}
+	@PostMapping("/infra-auxi-create-new-bill")
+	ResponseEntity<BillResponse> getCreateBill(@Valid @RequestBody InfraAuxiBillRequest billRequest){
+		log.debug("post/request/outinfra/getbill InfraAuxiBillRequest: {} ", billRequest);
+		
+		BillResponse response = billGenerationService.getBillDetail(billRequest);
+		log.debug("post/response/getBill : {}",response);
+		
+		return ResponseEntity.ok(response);
+		
+	}
+	@PostMapping("/bill-print")
+	ResponseEntity<BillResponse> printBill(@RequestParam String chargeCode, @RequestParam String billType, @RequestParam double sessionId, @RequestHeader String userId){
+		printBillService.printBill(chargeCode,billType,sessionId);
+		return ResponseEntity.ok(null);
 		
 	}
 }

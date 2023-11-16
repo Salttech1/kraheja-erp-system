@@ -2,6 +2,7 @@ package kraheja.sales.outgoing.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 //import org.springframework.http.ResponseEntity;
 //import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import kraheja.sales.bean.request.OutgoingReportsRequestBean;
+import kraheja.sales.bean.request.OutgoingSummaryRequestBean;
 //import kraheja.sales.outgoing.GstInfoDto;
 import kraheja.sales.outgoing.service.OutgoingReportsService;
 
@@ -40,6 +42,20 @@ public class OutgoingReportsController {
 	@PostMapping("/generate-billdata")
 	public ResponseEntity<?> inserttempowner(@RequestBody OutgoingReportsRequestBean outgoingReportsRequestBean) {
 		return this.outgoingReportsService.processOgBills(outgoingReportsRequestBean);
+	}
+
+	@PostMapping("/add-into-outgoing-summary-report-temp-table")
+	public ResponseEntity<?> addIntoOGSummaryTempTables(
+			@RequestBody OutgoingSummaryRequestBean outgoingSummaryRequestBean) {
+		System.out.println("data");
+
+		return this.outgoingReportsService.addIntoOGSummaryTempTables(outgoingSummaryRequestBean);
+
+	}
+
+	@DeleteMapping("/delete-temp-table-from-sessionId")
+	public ResponseEntity<?> truncateTempTable(Integer sessionId, Boolean isAgeing) {
+		return this.outgoingReportsService.deleteTempTableFromSessionId(sessionId);
 	}
 
 }

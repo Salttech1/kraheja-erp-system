@@ -129,10 +129,11 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 	}
 
 	@Override
-	public InchequeResponse saveIncheqe(String bldgCode, String wing, String flatNumber, String chargeCode,
+	public InchequeResponse saveIncheqe(String bldgCode, String wing, String flatNumber, String chargeCode, String billType,
 			InchequeRequest inchequeRequest) {
 		log.debug("inchequeRequest: {}", inchequeRequest);
 
+		String remarks = "";
 		String result = Result.FAILED;
 		String message = ApiResponseMessage.INCHEQ_DETAIL_FAILED_TO_SAVE;
 		String responseCode = ApiResponseCode.FAILED;
@@ -143,6 +144,9 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 
 		String receiptNumber = GenericCounterIncrementLogicUtil.generateTranNoWithSite("#NSER", "#REC", siteName);
 		log.debug("receiptNumber: {}", receiptNumber);
+		
+		String transer = GenericCounterIncrementLogicUtil.generateTranNoWithSite("#NSER", "RCSER", siteName);
+		log.debug("transer: {}", transer);
 
 		String recieptDate = DateUtill.dateFormatter(inchequeRequest.getReceiptDate());
 
@@ -173,6 +177,7 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 		}
 
 		List<ChequeRequest> cheques = inchequeRequest.getCheques();
+		List<GridResponse> gridRequest = inchequeRequest.getGridRequest();
 		List<InchequeDetailResponse> chequeResponse = new ArrayList<>();
 
 		if (wing.equals("")) {
@@ -184,6 +189,10 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 		log.debug("ownerId : {}", ownerId);
 
 		try {
+			for (GridResponse grid : gridRequest) {
+				remarks = grid.getNarration();
+			}
+			
 			for (ChequeRequest chequeRequest : cheques) {
 
 				chequeNo = chequeRequest.getChequeNumber();
@@ -194,17 +203,31 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 				} else {
 					inchqMode = "C";
 				}
-				InchqCK ck = InchqCK.builder().inchqNum(chequeRequest.getChequeNumber()) // 1
+				InchqCK ck = InchqCK.builder()
+						.inchqNum(chequeRequest.getChequeNumber()) // 1
 						.inchqBank(chequeRequest.getBank()) // 4
-						.inchqTranser(receiptNumber).build();
+						.inchqCoy(buildingDBResponse.getBldgCoy())
+						.inchqTranser(transer)
+						.inchqRecnum(receiptNumber)
+						.build();
 
-				Inchq inchqEntity = Inchq.builder().inchqCk(ck).inchqPaymode(inchqMode) // 0
+				Inchq inchqEntity = Inchq.builder()
+						.inchqCk(ck)
+						.inchqPaymode(inchqMode) // 0
 						.inchqAmount(chqAmt) // 2
 						.inchqDate(chequeRequest.getChequeDate()) // 3
 						.inchqOutstat(chequeRequest.getOutstat()) // 5
-						.inchqRemark("").inchqProprietor(buildingDBResponse.getBldgProp()).inchqPartycode(partyCode)
-						.inchqFund(chequeRequest.getFundSource()).inchqActype(chequeRequest.getAcType())
-						.inchqSite(siteName).inchqUserid(userId).inchqToday(LocalDateTime.now()).build();
+						.inchqResubcount(0.00)
+						.inchqRemark(remarks)
+						.inchqProprietor(buildingDBResponse.getBldgProp())
+						.inchqOrigsys("IN")
+						.inchqPartycode(partyCode)
+						.inchqFund(chequeRequest.getFundSource())
+						.inchqActype(chequeRequest.getAcType())
+						.inchqSite(siteName)
+						.inchqUserid(userId)
+						.inchqToday(LocalDateTime.now())
+						.build();
 
 				Inchq save = inchqRepository.save(inchqEntity);
 
@@ -226,14 +249,15 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 			}
 
 			String outInfraPersistResult = this.saveOutInfra(inchequeRequest.getGridRequest(), userId, siteName,
-					bldgCode, wing, flatNumber, chargeCode, inchequeRequest.getReceiptDate(), receiptNumber);
+					bldgCode, wing, flatNumber, chargeCode, billType, inchequeRequest.getReceiptDate(), receiptNumber);
 			log.debug("out infra persist result: {}", outInfraPersistResult);
 
 			/*
 			 * this method is use for insert int actranh table
 			 */
-			ActranhCK actranhCk = ActranhCK.builder().acthTranser(receiptNumber)
+			ActranhCK actranhCk = ActranhCK.builder().acthTranser(transer)
 					.acthCoy(buildingDBResponse.getBldgCoy()).build();
+			
 			Actranh actranh = Actranh.builder().actranhCK(actranhCk).acthTrantype("RC")
 					.acthTrandate(LocalDateTime.now()).acthLedgcode("").acthPartytype("F").acthPartycode(partyCode)
 					.acthTranamt(inchequeRequest.getTransactionAmt()).acthProprietor(buildingDBResponse.getBldgProp())
@@ -317,7 +341,10 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 	}
 
 	private String saveOutInfra(List<GridResponse> gridRequest, String userId, String siteName, String bldgCode,
-			String wing, String flatNumber, String chargeCode, LocalDateTime receiptDate, String receiptNumber) {
+			String wing, String flatNumber, String chargeCode, String billType, LocalDateTime receiptDate, String receiptNumber) {
+		log.debug("saveOutInfra obtain gridRequest: {} userId: {} siteName: {} bldgCode : {} wing: {} flatNumber: {} chargeCode: {} receiptDate: {} receiptNumber : {}",gridRequest, userId, siteName, bldgCode, wing, flatNumber, chargeCode, receiptDate, receiptNumber );
+
+		
 		String outInfraSaveResult = Result.FAILED;
 
 		String ownerId = bldgCode + wing + flatNumber;
@@ -341,13 +368,12 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 			Outinfra outinfra = Outinfra.builder().outinfraCK(outinfraCK).infWing(wing).infFlatnum(flatNumber)
 					.infCoy(buildingDBResponse.getBldgCoy()).infAmtdue(0.00).infAmtpaid(grid.getAuxiPaid())
 					.infAmtos(0.00).infAmtint(grid.getIntPaid()).infOrigint(0.00).infChargecode(chargeCode)
-					.infRecdate(receiptDate.toLocalDate())
-//			.infRecprintyn("N")
+					.infRecdate(receiptDate.toLocalDate()).infRecprintyn("N")
 					.infCancelledyn("N").infRemarks(grid.getNarration()).infSite(siteName).infUserid(userId)
-					.infToday(LocalDateTime.now()).infOrigsite(siteName).infGstyn("Y").infRectype("N")
+					.infToday(LocalDateTime.now()).infOrigsite(siteName).infGstyn("Y").infRectype(billType)
 					.infCgst(grid.getCgst()).infSgst(grid.getSgst()).infIgst(grid.getIgst())
-					.infCgstperc(grid.getCgstPercent()).infSgstperc(grid.getSgstPercent())
-					.infIgstperc(grid.getIgstPercent()).build();
+					.infAdmincharges(grid.getAdmin()).infCgstperc(grid.getCgstPercent()).infSgstperc(grid.getSgstPercent())
+					.infIgstperc(grid.getIgstPercent()).infTds(grid.getTds()).build();
 
 			Outinfra saveOutinfra = outinfraRepository.save(outinfra);
 

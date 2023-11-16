@@ -22,4 +22,7 @@ public interface ReportParametersService {
 	
 	ResponseEntity<?> gorssSalaryDetExcelCreation(String paymonthfrom);	
 
+	ResponseEntity<?> empwiseMonthlySummaryPT(String coyCode, String deptCodes,
+			String empCodes, String salaryTypes, String paymonth, String paymentDate,  String empType ) ;
+	
 }

@@ -1,5 +1,7 @@
 package kraheja.constant;
 
+import kraheja.exception.InternalServerError;
+
 /**
  * <p>Application response constant.</p>
  * 
@@ -29,7 +31,12 @@ public class ApiResponseMessage {
 	
 	public static final String INCHEQ_DETAIL_FAILED_TO_SAVE = "incheq detail failed to save.";
 	public static final String CHEQUE_ALREADY_IN_USED = "cheque number already in used. please check the cheque number.";
-	public static final String START_DATE_NOT_SPECIFIED = "start date is not specified. please contact to admin.";
+	public static final String ADMIN_AND_MAINTANACE_RATE_ZERO = "both admin and maintanace rate are zero. please enter required rate.";
+	public static final String CHECK_ADMIN_OR_MAINTANACE_RATE_ZERO = "admin or maintanace rate may be zero. please enter required rate.";
 	
+	public static final String BILL_FETCH_SUCCESSFULLY = "bill fetch successfully.";
+	public static final String BILL_CALCULATED_SUCCESSFULLY = "bill calculated successfully.";
+	public static final String FLAT_OWNER_ID_NOT_AVAILABLE = "flat owner id is not registered.";
 	
+
 }

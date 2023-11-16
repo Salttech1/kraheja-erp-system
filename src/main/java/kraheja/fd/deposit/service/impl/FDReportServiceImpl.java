@@ -168,11 +168,10 @@ public class FDReportServiceImpl implements FDReportService {
 				+ "and din.DIN_INTFROM >= to_date('" + neftReportRequestBean.getFromDate().trim() +"','dd/MM/yyyy') "
 				+ "and din.DIN_INTUPTO ".concat(dateCondition).concat("= to_date('".concat(neftReportRequestBean.getToDate().trim()).concat("','dd/MM/yyyy') "))
 				+ "and din.DIN_SESSID is not null "
-				+ "and (select substr(par_payeeifsc1,1,4) from party where trim(par_partycode) = Trim(din.DIN_COY)||Trim(din.DIN_DEPOSITOR) and par_partytype = 'D') ".concat(neftReportRequestBean.getBankString()).concat(depositorCondition)
 				+ " group by  DIN_DEPOSITOR,Replace(Replace(Replace(upper(Replace(Trim(dep.DEPTR_NAME),'(', '')),')',''),'.',''),'`',''),Trim(din.DIN_COY)||Trim(din.DIN_DEPOSITOR) "
 				+ " order by DIN_DEPOSITOR ";	
 		logger.debug("Query :: {}", sqlQuery);
-
+//		+ "and (select substr(par_payeeifsc1,1,4) from party where trim(par_partycode) = Trim(din.DIN_COY)||Trim(din.DIN_DEPOSITOR) and par_partytype = 'D') ".concat(neftReportRequestBean.getBankString()).concat(depositorCondition)
 		try {
 			File excelFile = ExcelUtils.INSTANCE.export(sqlQuery, dbUrl, dbUsername, dbPassword);
 

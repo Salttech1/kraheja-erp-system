@@ -19,14 +19,17 @@ import javax.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import kraheja.arch.projbldg.dataentry.service.serviceimpl.BuildingServiceImpl;
 import kraheja.commons.bean.response.ServiceResponseBean;
 import kraheja.commons.filter.GenericAuditContextHolder;
+import kraheja.commons.repository.EntityRepository;
 import kraheja.commons.utils.GenericCounterIncrementLogicUtil;
 import kraheja.sales.bean.request.OutgoingReportsRequestBean;
+import kraheja.sales.bean.request.OutgoingSummaryRequestBean;
 import kraheja.sales.infra.service.impl.OutinfraServiceImpl;
 import kraheja.sales.outgoing.service.OutgoingReportsService;
 
@@ -35,6 +38,9 @@ import kraheja.sales.outgoing.service.OutgoingReportsService;
 public class OutgoingReportsServiceImpl implements OutgoingReportsService {
 
 	private static final Logger logger = LoggerFactory.getLogger(OutgoingReportsServiceImpl.class);
+
+	@Autowired
+	private EntityRepository entityRepository;
 
 	@Autowired
 	private OutinfraServiceImpl outinfraServiceImpl;
@@ -1239,5 +1245,86 @@ public class OutgoingReportsServiceImpl implements OutgoingReportsService {
 //			return ResponseEntity
 //					.ok(ServiceResponseBean.builder().status(Boolean.FALSE).message("No data found.").build());
 //
+	}
+
+	@Override
+	public ResponseEntity<?> addIntoOGSummaryTempTables(OutgoingSummaryRequestBean outgoingSummaryRequestBean) {
+
+		// Used in Outgoing Summary Report
+		String sessionId = GenericCounterIncrementLogicUtil.generateTranNo("#SESS", "#SESS");
+		Query addIntoTempTableQuery;
+		Integer rowCount;
+
+		addIntoTempTableQuery = this.entityManager.createNativeQuery(
+				"INSERT INTO saogrp04p( \r\n" + "sump_bldgcode,sump_billamt,sump_amtpaid,sump_amtos,sump_sessid) \r\n"
+						+ "(select obill_bldgcode,sum(obill_billamt),sum(obill_amtpaid),sum(obill_amtos),:sessionId\r\n"
+						+ "FROM outbill WHERE obill_month < :fromMonth GROUP BY	obill_bldgcode)\r\n");
+		addIntoTempTableQuery.setParameter("sessionId", sessionId);
+		addIntoTempTableQuery.setParameter("fromMonth", outgoingSummaryRequestBean.getFromMonth());
+		logger.info("fromMonth :: ", outgoingSummaryRequestBean);
+		logger.info("fromMonth :: ", outgoingSummaryRequestBean.getFromMonth());
+		logger.info("QUERY :: {}", addIntoTempTableQuery);
+		rowCount = addIntoTempTableQuery.executeUpdate();
+
+		if (rowCount == 0) {
+			this.entityRepository.updateIncrementCounter("#SESS", "#SESS", Double.valueOf(sessionId));
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
+
+		addIntoTempTableQuery = this.entityManager.createNativeQuery("INSERT INTO saogrp04c( \r\n"
+				+ "sumc_bldgcode,sumc_billamt,sumc_amtpaid,sumc_amtos,sumc_sessid) \r\n"
+				+ "(select obill_bldgcode,sum(obill_billamt),sum(obill_amtpaid),sum(obill_amtos),:sessionId \r\n"
+				+ "FROM outbill WHERE obill_month BETWEEN :fromMonth AND :toMonth GROUP BY obill_bldgcode)\r\n");
+		addIntoTempTableQuery.setParameter("sessionId", sessionId);
+		addIntoTempTableQuery.setParameter("fromMonth", outgoingSummaryRequestBean.getFromMonth());
+		addIntoTempTableQuery.setParameter("toMonth", outgoingSummaryRequestBean.getToMonth());
+
+		logger.info("QUERY :: {}", addIntoTempTableQuery);
+		rowCount = addIntoTempTableQuery.executeUpdate();
+
+		if (rowCount == 0) {
+			this.entityRepository.updateIncrementCounter("#SESS", "#SESS", Double.valueOf(sessionId));
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
+
+		addIntoTempTableQuery = this.entityManager.createNativeQuery(
+				"INSERT INTO saogrp04f( \r\n" + "sumf_bldgcode,sumf_billamt,sumf_amtpaid,sumf_amtos,sumf_sessid) \r\n"
+						+ "(select obill_bldgcode,sum(obill_billamt),sum(obill_amtpaid),sum(obill_amtos),:sessionId\r\n"
+						+ "FROM outbill WHERE obill_month > :toMonth GROUP BY	obill_bldgcode)\r\n");
+		addIntoTempTableQuery.setParameter("sessionId", sessionId);
+		addIntoTempTableQuery.setParameter("toMonth", outgoingSummaryRequestBean.getToMonth());
+
+		logger.info("QUERY :: {}", addIntoTempTableQuery);
+		rowCount = addIntoTempTableQuery.executeUpdate();
+
+		if (rowCount == 0) {
+			this.entityRepository.updateIncrementCounter("#SESS", "#SESS", Double.valueOf(sessionId));
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
+
+		return ResponseEntity.ok(ServiceResponseBean.builder().status(Boolean.TRUE).data(sessionId)
+				.message("Added successfully").build());
+
+	}
+
+	@Override
+	public ResponseEntity<?> deleteTempTableFromSessionId(Integer sessionId) {
+		Query deleteBySessIdTempTableQuery;
+		deleteBySessIdTempTableQuery = this.entityManager
+				.createNativeQuery("Delete From saogrp04p where sump_sessid= :sessionId");
+		deleteBySessIdTempTableQuery.setParameter("sessionId", sessionId);
+		deleteBySessIdTempTableQuery.executeUpdate();
+
+		deleteBySessIdTempTableQuery = this.entityManager
+				.createNativeQuery("Delete From saogrp04c where sumc_sessid= :sessionId");
+		deleteBySessIdTempTableQuery.setParameter("sessionId", sessionId);
+		deleteBySessIdTempTableQuery.executeUpdate();
+
+		deleteBySessIdTempTableQuery = this.entityManager
+				.createNativeQuery("Delete From saogrp04f where sumf_sessid= :sessionId");
+		deleteBySessIdTempTableQuery.setParameter("sessionId", sessionId);
+		deleteBySessIdTempTableQuery.executeUpdate();
+
+		return ResponseEntity.ok(ServiceResponseBean.builder().status(Boolean.TRUE).build());
 	}
 }

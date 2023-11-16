@@ -1,5 +1,7 @@
 package kraheja.sales.bean.request;
 
+import java.time.LocalDateTime;
+
 import javax.validation.constraints.NotEmpty;
 
 import lombok.AllArgsConstructor;
@@ -25,7 +27,10 @@ public class AuxilaryRequest {
 	@NotEmpty private String wing;
 	private String flatNum;
 	@NotEmpty private String date;
+	private LocalDateTime inputDate;
 	@NotEmpty private String receiptAmt;
 	@NotEmpty private String receiptAmtTds;
 	@NotEmpty private String totalAmt;
+	
+	
 }

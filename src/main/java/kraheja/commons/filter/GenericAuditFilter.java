@@ -27,6 +27,7 @@ public class GenericAuditFilter implements Filter {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
+	
 	@Autowired
 	private AuditService auditService;
 	

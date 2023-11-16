@@ -1,11 +1,8 @@
 package kraheja.sales.infra.service.impl;
 
 import java.lang.invoke.MethodHandles;
-import java.text.SimpleDateFormat;
-import java.time.YearMonth;
-import java.time.format.DateTimeFormatter;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -17,6 +14,7 @@ import kraheja.commons.entity.Hsnsacmaster;
 import kraheja.commons.repository.HsnsacmasterRepository;
 import kraheja.constant.ApiResponseMessage;
 import kraheja.exception.InternalServerError;
+import kraheja.exception.OutRateRateException;
 import kraheja.sales.bean.entitiesresponse.Balance;
 import kraheja.sales.bean.request.AuxilaryRequest;
 import kraheja.sales.bean.response.AuxilaryResponse;
@@ -39,50 +37,90 @@ public class AuxilaryServiceImpl implements AuxilaryService {
 
 	@Override
 	public AuxilaryResponse getGridData(AuxilaryRequest request) {
-
-		String strStartDate = null;
-		
+		String strStartDate = "";
+		String flatNumber = request.getFlatNum().trim();
+		String ownerId = "";
 		try {
-		/**
-		 * check here the type of service and type of bill set from here the query.
-		 */
-		if ("AUXI".equalsIgnoreCase(request.getChargeCode())) {
-
+			/**
+			 * check here the type of service and type of bill set from here the query.
+			 */
+			double receiptAmt = Double.parseDouble(request.getTotalAmt());
+			ownerId = request.getBuildingCode() + request.getWing() + flatNumber;
+			if (request.getWing().equals("") || request.getWing().equals(" ")) {
+				request.setWing(" ");
+				ownerId = request.getBuildingCode() + " " + flatNumber;
+			}else {
+				request.setWing(request.getWing().trim());
+			}
 			strStartDate = startYearMonthFromDatabase(request.getBuildingCode(), request.getWing(),
-					request.getFlatNum(), request.getBillType());
+					flatNumber, request.getBillType());
 			log.debug("strStartDate : {}", strStartDate);
 
+			LocalDateTime date = request.getInputDate();
+			String strDate = DateUtill.dateFormatter(date);
+			request.setDate(strDate);
 			if (strStartDate.isEmpty() || strStartDate == null) {
 				strStartDate = DateUtill.startYearMonthFromInput(request.getDate());
 			}
-		} else {
+
+			double prevAmtintPaid = 0;
+			double prevAdminPaid = 0;
+			double prevCGSTtaxPaid = 0;
+			double prevSGSTtaxPaid = 0;
+			double prevIGSTtaxPaid = 0;
+			double prevTDStaxPaid = 0;
+			List<GridResponse> respone = null;
+			List<Balance> balanceList = outinfraRepository.findPreviousBalance(ownerId, strStartDate,request.getChargeCode(), request.getBillType());
 			
-		}
-		List<Balance> balanceList = outinfraRepository.findPreviousBalance(
-				(request.getBuildingCode() + request.getWing() + request.getFlatNum()), strStartDate,
-				request.getChargeCode(), request.getBillType());
-
 			if (!balanceList.isEmpty()) {
-				for (Balance balance : balanceList) {
-				}
-			}
-			request.setDate(strStartDate);
-			List<GridResponse> respone = taxCalculation(request);
-			log.debug("respone : {}", respone);
+				Balance balance = balanceList.get(balanceList.size() - 1);
+				prevTDStaxPaid = Math.abs(balance.getTds());
+				request.setDate(balance.getMonth());
+				double amount = balance.getCgst() + balance.getSgst() + balance.getIgst()
+						+ balance.getAdminharges() + balance.getAmtint() + balance.getAmtPaid();
+				
+				receiptAmt = receiptAmt + amount;
+				log.debug("receiptAmt after fetched last balance: {}", receiptAmt);
 
+				 respone = taxCalculation(receiptAmt, request, prevAmtintPaid, prevAdminPaid, prevCGSTtaxPaid,
+						prevSGSTtaxPaid, prevIGSTtaxPaid, prevTDStaxPaid);
+				 
+				 
+				 // CALCULATE LAST MONTH PAID AMOUNT AND REMAINING AMOUNT 
+				 GridResponse gridResponse1 = respone.get(1); 
+				 GridResponse gridResponse0 = respone.get(0);
+				 gridResponse0.setAdmin(gridResponse1.getAdmin() - balance.getAdminharges());
+				 gridResponse0.setAuxiPaid(gridResponse1.getAuxiPaid() - balance.getAmtPaid());
+				 gridResponse0.setCgst(gridResponse1.getCgst() - balance.getCgst());
+				 gridResponse0.setSgst(gridResponse1.getSgst() - balance.getSgst());
+				 gridResponse0.setIgst(gridResponse1.getIgst() - balance.getIgst());
+				 gridResponse0.setTds(prevCGSTtaxPaid); 
+				 respone.set(0, gridResponse0);
+				 if (respone.get(0).getAuxiPaid() < 1 && respone.get(0).getAdmin() < 1 && respone.get(0).getCgst() < 1) {
+					 respone.remove(0);
+					 request.setDate(gridResponse1.getMonthName());
+				}
+				log.debug("respone : {}", respone);
+			}else {
+				request.setDate(strStartDate);
+				respone = taxCalculation(receiptAmt, request, prevAmtintPaid, prevAdminPaid, prevCGSTtaxPaid,
+						prevSGSTtaxPaid, prevIGSTtaxPaid, prevTDStaxPaid);
+				log.debug("respone : {}", respone);
+			}
+			
 			String totalMonthCount = String.valueOf(respone.size());
-			String endMonth = DateUtill.endMonth((respone.size() - 1) + Integer.parseInt(strStartDate));
+			String endMonth = DateUtill.endMonth((respone.size() - 1) + Integer.parseInt(request.getDate()));
 
 			return AuxilaryResponse.builder().result("success").responseCode("00").message("successfully fetch.")
-					.startMonth(strStartDate).endMonth(endMonth).totalMonth(totalMonthCount).data(respone).build();
+					.startMonth(request.getDate()).endMonth(endMonth).totalMonth(totalMonthCount).data(respone).build();
 
 		} catch (NullPointerException e) {
-			log.debug("exception occured : {}", e.getMessage());
-			throw new InternalServerError(ApiResponseMessage.START_DATE_NOT_SPECIFIED);
+//			log.debug("exception occured : {}", e.getMessage());
+			throw new InternalServerError(ApiResponseMessage.CHECK_ADMIN_OR_MAINTANACE_RATE_ZERO);
 		} catch (Exception e) {
-		log.debug("exception occured : {}", e.getMessage());
-		throw new InternalServerError(e.getMessage());
-	}
+//		log.debug("exception occured : {}", e.getMessage());
+			throw new InternalServerError(e.getMessage());
+		}
 	}
 
 	// use this method to fetch start date
@@ -91,44 +129,66 @@ public class AuxilaryServiceImpl implements AuxilaryService {
 		return outrateRepository.fetchStartDate(buildingCode, wing, flatNum, billType);
 	}
 
-	
-
-	public List<GridResponse> taxCalculation(AuxilaryRequest request) {
+	public List<GridResponse> taxCalculation(double amount, AuxilaryRequest request, double prevAmtintPaid, double prevAdminPaid,
+			double prevCGSTtaxPaid, double prevSGSTtaxPaid, double prevIGSTtaxPaid, double prevTDStaxPaid) {
 		List<GridResponse> insertRowList = new ArrayList<>();
 
-		String buildingCode = request.getBuildingCode();
+		String buildingCode = request.getBuildingCode().trim();
 		String wing = request.getWing();
-		String flatNum = request.getFlatNum();
-		String date = request.getDate();
+		String flatNum = request.getFlatNum().trim();
+		String date = request.getDate().trim();
 		String billType = request.getBillType();
 		String narration = request.getNarration();
-		double amount = Double.parseDouble(request.getTotalAmt());
+//		double amount = Double.parseDouble(request.getTotalAmt());
 		double receiptTds = Double.parseDouble(request.getReceiptAmtTds());
-
-		String adminRateDB = outrateRepository.findAdminRateMonthWise(buildingCode, wing, flatNum, billType);
-		double adminRate = Double.parseDouble(adminRateDB);
+		
+		double adminRate = 0,maintRate=0, tdsRate = 0; 
+		/**
+		 * CHECK CONDITION MONTH INFRA AND AUXI FOR THE OUTRATE RATE
+		 */
+		try {
+			if (wing.equals(" ")) {
+				if (request.getChargeCode().equals("INAP")) {
+					adminRate = outrateRepository.findAdminRateForEmptyWing(buildingCode, flatNum, billType);
+					maintRate = outrateRepository.findAuxiRateForEmptyWing(buildingCode, flatNum, billType);
+				} else {
+					adminRate = outrateRepository.findAdminRateForEmptyWing(buildingCode, flatNum, billType);
+					maintRate = outrateRepository.findAuxiRateForEmptyWing(buildingCode, flatNum, billType);
+				}
+				tdsRate = outrateRepository.findTdsRateForEmptyWingMonthWise(buildingCode, flatNum, billType, date);
+			}else {
+				if (request.getChargeCode().equals("INAP")) {
+					adminRate = outrateRepository.findAdminRateMonthWiseForInfra(buildingCode, wing, flatNum, billType, date);
+					maintRate = outrateRepository.findOutrAuxiRateMonthWiseForInfra(buildingCode, wing, flatNum, billType, date);
+				} else {
+					adminRate = outrateRepository.findAdminRateMonthWiseForAuxi(buildingCode, wing, flatNum, billType, date);
+					maintRate = outrateRepository.findOutrAuxiRateMonthWiseForAuxi(buildingCode, wing, flatNum, billType, date);
+				}
+				tdsRate = outrateRepository.findTdsRateMonthWise(buildingCode, wing, flatNum, billType, date);
+				
+			}
+		} catch (org.springframework.aop.AopInvocationException e) {
+			throw new OutRateRateException(ApiResponseMessage.CHECK_ADMIN_OR_MAINTANACE_RATE_ZERO, 200);
+		}
+		
+		
 		log.debug("adminRate from db: {}", adminRate);
-
-		String auxiRateDb = outrateRepository.findOutrAuxiRateMonthWise(buildingCode, wing, flatNum, billType);
-		double maintRate = Double.parseDouble(auxiRateDb);
 		log.debug("auxiRate from db: {}", maintRate);
-
-		String tdsRateDb = outrateRepository.findTdsRateMonthWise(buildingCode, wing, flatNum, billType);
-		double tdsRate = Double.parseDouble(tdsRateDb);
 		log.debug("tdsRate from db: {}", tdsRate);
+		
 
-		double prevMaintPaid = 0;
-		double prevAmtintPaid = 0;
-		double prevCGSTtaxPaid = 0;
-		double prevSGSTtaxPaid = 0;
-		double prevIGSTtaxPaid = 0;
-		double prevAdminPaid = 0;
-		double prevTDStaxPaid = 0;
+		if (adminRate == 0 && maintRate == 0) {
+			throw new InternalServerError(ApiResponseMessage.ADMIN_AND_MAINTANACE_RATE_ZERO);
+		}
+//		double prevMaintPaid = 0;
+//		double prevAmtintPaid = 0;
+//		double prevCGSTtaxPaid = 0;
+//		double prevSGSTtaxPaid = 0;
+//		double prevIGSTtaxPaid = 0;
+//		double prevAdminPaid = 0;
+//		double prevTDStaxPaid = 0;
 
 		while (amount > 0) {
-//			amount = this.calculateAllocation(amount, adminRate, maintRate, receiptTds, tdsRate, prevAdminPaid,
-//					prevMaintPaid, prevAmtintPaid, prevCGSTtaxPaid, prevSGSTtaxPaid, prevIGSTtaxPaid, prevTDStaxPaid, billType, date);
-
 			Hsnsacmaster gst = hsnsacmasterRepository.findByHsnsacmasterCKHsmsCode("995419");
 			Double cgstPerc = gst.getHsmsCgstperc();
 			Double sgstPerc = gst.getHsmsSgstperc();
@@ -245,7 +305,7 @@ public class AuxilaryServiceImpl implements AuxilaryService {
 								adjSGSTAdmin = Math.ceil(adjSGSTAdmin * factor);
 								adjIGSTAdmin = Math.ceil(adjIGSTAdmin * factor);
 							}
-							adjAdmin = amount - adjCGSTAdmin - adjSGSTAdmin - adjIGSTAdmin;
+							adjAdmin = Double.parseDouble(String.format("%.2f",amount - adjCGSTAdmin - adjSGSTAdmin - adjIGSTAdmin));
 							amount = 0;
 						}
 					}
@@ -295,7 +355,7 @@ public class AuxilaryServiceImpl implements AuxilaryService {
 								adjSGSTMaint = Math.ceil(adjSGSTMaint * factor);
 								adjIGSTMaint = Math.ceil(adjIGSTMaint * factor);
 							}
-							adjMaint = amount - adjCGSTMaint - adjSGSTMaint - adjIGSTMaint;
+							adjMaint = Double.parseDouble(String.format("%.2f", amount - adjCGSTMaint - adjSGSTMaint - adjIGSTMaint));
 							amount = 0;
 						}
 					}
@@ -335,16 +395,15 @@ public class AuxilaryServiceImpl implements AuxilaryService {
 					}
 				}
 			}
-			double cgst = adjCGSTAdmin + adjCGSTMaint;
-			double sgst = adjSGSTAdmin + adjSGSTMaint;
-			double igst = adjIGSTAdmin + adjIGSTMaint;
+			double cgst = Double.parseDouble(String.format("%.2f",adjCGSTAdmin + adjCGSTMaint));
+			double sgst = Double.parseDouble(String.format("%.2f",adjSGSTAdmin + adjSGSTMaint));
+			double igst = Double.parseDouble(String.format("%.2f",adjIGSTAdmin + adjIGSTMaint));
 			GridResponse response = insertRow(date, adjAdmin, adjMaint, cgst, sgst, igst, adjTDS, cgstPerc, sgstPerc,
 					igstPerc, narration);
 			insertRowList.add(response);
 
 			date = DateUtill.increaseMonth(date);
 		}
-
 		return insertRowList;
 	}
 
@@ -360,6 +419,5 @@ public class AuxilaryServiceImpl implements AuxilaryService {
 		return response;
 
 	}
-
 
 }

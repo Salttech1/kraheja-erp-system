@@ -1,5 +1,8 @@
 package kraheja.payroll.repository;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 import javax.persistence.Tuple;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -35,5 +38,44 @@ public interface EmployeeDetailsEntryEditRepository extends JpaRepository<Empjob
 			+ "       AND trim(efor_jobtype) = :empJobtype\r\n"
 			+ "       AND trim(efor_earndedcode) = :earndedcode",nativeQuery = true)
 	String GetFormula(String empCoy,char empType,char empJobtype,String earndedcode);
+	
+	@Query(value="SELECT CSPK_EARNDEDCODE AS earndedcode,\r\n"
+			+ "       EDHM_DISPLAYNAME AS EarnDesc,\r\n"
+			+ "       CSPK_PAYCYCLE    AS paycycle,\r\n"
+			+ "       CSPK_RATECYCLE   AS ratecycle\r\n"
+			+ "FROM   coysalarypackage,\r\n"
+			+ "       EARNDEDMASTER\r\n"
+			+ "WHERE  EDHM_EARNDEDCODE = CSPK_EARNDEDCODE\r\n"
+			+ "       AND TRIM(CSPK_COY) = :coycode\r\n"
+			+ "       AND CSPK_EFFECTIVEUPTO = :closeDate\r\n"
+			+ "       AND CSPK_SHOWINSALPACK = 'Y'\r\n"
+			+ "       AND CSPK_EARNDEDCODE IN (SELECT EDHM_EARNDEDCODE\r\n"
+			+ "                                FROM   EARNDEDMASTER\r\n"
+			+ "                                WHERE  EDHM_EARNDEDTYPE = 'A')\r\n"
+			+ "ORDER  BY EDHM_COMPUTENO,\r\n"
+			+ "          CSPK_RATECYCLE DESC,\r\n"
+			+ "          CSPK_PAYCYCLE DESC,\r\n"
+			+ "          CSPK_EARNDEDCODE",nativeQuery = true)
+	List<Tuple> fetchCompanySalPackage(String coycode,String closeDate);
+	
+	@Query(value="SELECT CSPK_EARNDEDCODE,\r\n"
+			+ "       EDHM_DISPLAYNAME AS DedDesc,\r\n"
+			+ "       CSPK_PAYCYCLE    AS payment,\r\n"
+			+ "       CSPK_RATECYCLE   AS Modes\r\n"
+			+ "FROM   coysalarypackage,\r\n"
+			+ "       EARNDEDMASTER\r\n"
+			+ "WHERE  EDHM_EARNDEDCODE = CSPK_EARNDEDCODE\r\n"
+			+ "       AND Trim(CSPK_COY) = :coycode\r\n"
+			+ "       AND CSPK_EFFECTIVEUPTO = :closeDate\r\n"
+			+ "       AND CSPK_SHOWINSALPACK = 'Y'\r\n"
+			+ "       AND CSPK_EARNDEDCODE IN (SELECT EDHM_EARNDEDCODE\r\n"
+			+ "                                FROM   EARNDEDMASTER\r\n"
+			+ "                                WHERE  EDHM_EARNDEDTYPE = 'D')\r\n"
+			+ "       AND edhm_schemeyn = 'N'\r\n"
+			+ "ORDER  BY EDHM_COMPUTENO,\r\n"
+			+ "          CSPK_RATECYCLE DESC,\r\n"
+			+ "          CSPK_PAYCYCLE DESC,\r\n"
+			+ "          CSPK_EARNDEDCODE",nativeQuery = true)
+	List<Tuple> fetchCompanySalDedPackage(String coycode,String closeDate);
 
 }

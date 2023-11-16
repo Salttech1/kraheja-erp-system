@@ -1,4 +1,4 @@
-package kraheja.adminexp.billing.dataentry.entity;
+package kraheja.adminexp.billing.dataentry.invoiceCreation.entity;
 
 import java.io.Serializable;
 
@@ -17,19 +17,25 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 
-public class InvpartymasterCK implements Serializable {
+public class InvoicedetailCK implements Serializable{
 
 	private static final long serialVersionUID = 1L;
 
-	private String ipmsCoycode;
+	@Column
+	@Type(type = "kraheja.commons.utils.CharType") 
+	private String invdTrtype ; 
 
-	private String ipmsPartytype;
+	@Column
+	@Type(type = "kraheja.commons.utils.CharType") 
+	private String invdInvoiceno ; 
 
-	private String ipmsPartycode;
+	@Column
+	@Type(type = "kraheja.commons.utils.CharType") 
+	private String invdCode ; 
 
-	private String ipmsBilltype;
-
-	private String ipmsItemBillCode;
+	@Column
+	 
+	private Integer invdSrno ; 
 
 	public static long getSerialversionuid() {
 		return serialVersionUID;

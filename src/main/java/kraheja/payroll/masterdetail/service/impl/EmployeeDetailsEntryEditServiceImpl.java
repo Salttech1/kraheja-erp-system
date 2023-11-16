@@ -1,34 +1,24 @@
 package kraheja.payroll.masterdetail.service.impl;
 
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.imageio.ImageIO;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.persistence.Tuple;
 import javax.transaction.Transactional;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import io.swagger.models.properties.StringProperty.Format;
-import kraheja.adminexp.vehicleexp.dataentry.bean.response.UnPostedCertBean;
 import kraheja.commons.bean.response.ServiceResponseBean;
 import kraheja.commons.entity.Address;
 import kraheja.commons.enums.AdSegment;
@@ -36,7 +26,7 @@ import kraheja.commons.enums.AdType;
 import kraheja.commons.mappers.pojoentity.AddressMapper;
 import kraheja.commons.repository.AddressRepository;
 import kraheja.commons.utils.CommonConstraints;
-import kraheja.commons.utils.CommonUtils;
+import kraheja.payroll.bean.CoysalarypackageBean;
 import kraheja.payroll.bean.EmployeeDetailsResponseBean;
 import kraheja.payroll.bean.EmployeeSalDetailsResponseBean;
 import kraheja.payroll.bean.EmpsalarypackageEarnDedBean;
@@ -48,7 +38,6 @@ import kraheja.payroll.entity.Empjobinfo;
 import kraheja.payroll.entity.Empleaveinfo;
 import kraheja.payroll.entity.Emppersonal;
 import kraheja.payroll.entity.Empreference;
-import kraheja.payroll.entity.Empsalarypackage;
 import kraheja.payroll.entity.Empschemeinfo;
 import kraheja.payroll.masterdetail.mappers.EmpassetinfoEntityPojoMapper;
 import kraheja.payroll.masterdetail.mappers.EmpeducationEntityPojoMapper;
@@ -58,7 +47,6 @@ import kraheja.payroll.masterdetail.mappers.EmpjobinfoEntityPojoMapper;
 import kraheja.payroll.masterdetail.mappers.EmpleaveinfoEntityPojoMapper;
 import kraheja.payroll.masterdetail.mappers.EmppersonalEntityPojoMapper;
 import kraheja.payroll.masterdetail.mappers.EmpreferenceEntityPojoMapper;
-import kraheja.payroll.masterdetail.mappers.EmpsalarypackageEntityPojoMapper;
 import kraheja.payroll.masterdetail.mappers.EmpschemeinfoEntityPojoMapper;
 import kraheja.payroll.masterdetail.service.EmployeeDetailsEntryEditService;
 import kraheja.payroll.repository.EmpassetinfoRepository;
@@ -432,5 +420,39 @@ public class EmployeeDetailsEntryEditServiceImpl implements EmployeeDetailsEntry
 		return ResponseEntity.ok(ServiceResponseBean.builder().status(Boolean.FALSE).message("No Salary Package found for your Employee Code").build());
 
 	}
+
+
+	public ResponseEntity<?> fetchCompanySalPackage(String coycode,String closeDate){
+		List<Tuple> coysalarypackagelist = employeeDetailsEntryEditRepository.fetchCompanySalPackage(coycode,CommonConstraints.INSTANCE.closeDate);
+		if (coysalarypackagelist.size()>0) {
+			List<CoysalarypackageBean> coysalarypackageBean =
+					coysalarypackagelist.stream().map(t -> {return new CoysalarypackageBean(
+							t.get(0, String.class).trim(),
+							t.get(1, String.class).trim(),
+							t.get(2, Character.class),
+							t.get(3, Character.class)
+							);
+					}
+							).collect(Collectors.toList());
+			return ResponseEntity.ok(ServiceResponseBean.builder().status(Boolean.TRUE).data(coysalarypackageBean).build());
+		}
+		return ResponseEntity.ok(ServiceResponseBean.builder().status(Boolean.FALSE).message("No Salary Package found for your Company").build());
+	}
 	
+	public ResponseEntity<?> fetchCompanySalDedPackage(String coycode,String closeDate){
+		List<Tuple> coysalarypackagelist = employeeDetailsEntryEditRepository.fetchCompanySalDedPackage(coycode,CommonConstraints.INSTANCE.closeDate);
+		if (coysalarypackagelist.size()>0) {
+			List<CoysalarypackageBean> coysalarypackageBean =
+					coysalarypackagelist.stream().map(t -> {return new CoysalarypackageBean(
+							t.get(0, String.class).trim(),
+							t.get(1, String.class).trim(),
+							t.get(2, Character.class),
+							t.get(3, Character.class)
+							);
+					}
+							).collect(Collectors.toList());
+			return ResponseEntity.ok(ServiceResponseBean.builder().status(Boolean.TRUE).data(coysalarypackageBean).build());
+		}
+		return ResponseEntity.ok(ServiceResponseBean.builder().status(Boolean.FALSE).message("No Salary Deduction Package found for your Company").build());
+	}
 }

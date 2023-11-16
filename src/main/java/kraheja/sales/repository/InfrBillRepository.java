@@ -1,7 +1,6 @@
 package kraheja.sales.repository;
 
-import java.time.LocalDate;
-import java.util.List;
+import java.sql.Timestamp;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -30,6 +29,7 @@ public interface InfrBillRepository extends JpaRepository<Infrbill, InfrbillCK> 
 			+ "b.infrTodate as infrTodate,"
 			+ "b.infrAmtos as infrAmtos,"
 			+ "b.infrArrears as infrArrears,"
+			+ "b.infrIntarrears as infrIntarrears,"
 			+ "b.infrInterest as infrInterest,"
 			+ "b.infrAdmincharges as infrAdmincharges,"
 			+ "b.infrCgst as infrCgst,"
@@ -61,4 +61,14 @@ public interface InfrBillRepository extends JpaRepository<Infrbill, InfrbillCK> 
 	        + "AND infr.infrbillCK.infrMonth >= '202310' "
 	        + "AND infr.infrBilltype = 'N'")
 	DBResponseForNewInfrBill fetchBillDateAndOldBalanceAndArearsAndInterestAndIntArears();
+	
+	@Query(value = "select infr_fromdate from infrbill where infr_ownerid='ORHHHF0000H' and infr_bldgcode='ORHH' and infr_wing='H' and infr_chargecode = 'AUXI' and infr_billnum='IN045650' and infr_billtype= 'N'", nativeQuery = true)
+	Timestamp fetchFromDate();
+	
+	@Query(value = "select * from infrbill where infr_ownerid=?  and infr_month=? and  infr_gstyn= 'Y' and infr_chargecode = ? and infr_billtype=?", nativeQuery = true)
+	Infrbill findBillNumberByOwnerIdAndMonth(String ownerid,String month, String chargecode, String billtype);
+	
+//	@Query(value = "update infrbill set infr_interest = '12732', infr_intarrears = '42322', infr_userid ='salt', infr_today = sysdate where trim(infr_billnum)= 'IN045726' and trim(infr_ownerid)='ORHHHF0000H' and infr_gstyn= 'Y' and infr_chargecode = 'AUXI'", nativeQuery = true)
+//	void updateBillNumber();
+	
 }

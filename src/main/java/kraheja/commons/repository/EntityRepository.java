@@ -3,9 +3,11 @@ package kraheja.commons.repository;
 import java.time.LocalDate;
 import java.util.List;
 
+import javax.persistence.LockModeType;
 import javax.persistence.Tuple;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -48,6 +50,7 @@ public interface EntityRepository extends JpaRepository<DbEntity, EntityCK>{
 	@Query("SELECT NVL(e.entNum2,0) FROM DbEntity e WHERE trim(e.entityCk.entClass)=:entClass AND trim(e.entityCk.entChar1)=:entChar1 AND trim(e.entityCk.entId)=:entId")
 	public Double findNum2ByEntityCk_EntClassAndEntityCk_EntChar1AndEntityCk_EntId(String entId, String entClass, String entChar1); 
 	
+	@Lock(LockModeType.PESSIMISTIC_READ) // SPECIFY THE LOCK MODE HERE FOR RESTRIC DUPLICAT TRANSER CREATION @Sazzad-01-11-23
 	@Query("SELECT e.entNum1,e.entityCk.entChar1,e.entityCk.entChar2 FROM DbEntity e WHERE trim(e.entityCk.entClass)=:entClass AND trim(e.entityCk.entId)=:entId")
 	public String fetchByEntityCk_EntClassAndEntityCk_EntId(String entClass, String entId); 
 	

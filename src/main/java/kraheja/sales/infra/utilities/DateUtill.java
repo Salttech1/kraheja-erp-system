@@ -1,5 +1,6 @@
 package kraheja.sales.infra.utilities;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -45,8 +46,6 @@ public class DateUtill {
 
 		// Format the date and time
 		String formattedDate = date.format(formatter);
-
-		System.out.println(formattedDate);
 		return formattedDate;
 	}
 
@@ -56,6 +55,8 @@ public class DateUtill {
 	}
 
 	public static String startYearMonthFromInput(String date) {
+		log.debug("date receipt into startYearMonthFromInput: {}", date);
+
 		String strYear = "";
 		String strMonth = "";
 		String strYearMonth = "";
@@ -125,5 +126,32 @@ public class DateUtill {
         }
 		return comparison;
 		
+	}
+	
+	// EXPECTED VALUE 01/01/2020
+	public static String dateToyearMonth(String inputDate) {
+		log.debug("date receipt into dateToyearMonth: {}", inputDate);
+
+        // Define the format for the input date
+        SimpleDateFormat inputFormat = new SimpleDateFormat("dd/MM/yyyy");
+        
+        // Define the format for the output (year month)
+        SimpleDateFormat outputFormat = new SimpleDateFormat("yyyyMM");
+        
+        try {
+            // Parse the input date string to a Date object
+            Date date = inputFormat.parse(inputDate);
+            
+            // Format the date to the desired output format
+            String outputDate = outputFormat.format(date);
+            
+            System.out.println("Input Date: " + inputDate);
+            System.out.println("Formatted Date (Year Month): " + outputDate);
+            return outputDate.toString();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+		return "";
 	}
 }

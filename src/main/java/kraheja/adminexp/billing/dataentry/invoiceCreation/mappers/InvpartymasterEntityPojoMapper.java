@@ -1,4 +1,4 @@
-package kraheja.adminexp.billing.dataentry.mappers;
+package kraheja.adminexp.billing.dataentry.invoiceCreation.mappers;
 
 
 import java.math.BigInteger;
@@ -10,8 +10,8 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import org.apache.commons.collections4.CollectionUtils;
 
-import kraheja.adminexp.billing.dataentry.bean.response.InvpartymasterResponseBean;
-import kraheja.adminexp.billing.dataentry.entity.Invpartymaster;
+import kraheja.adminexp.billing.dataentry.invoiceCreation.bean.response.InvpartymasterResponseBean;
+import kraheja.adminexp.billing.dataentry.invoiceCreation.entity.Invpartymaster;
 import kraheja.commons.filter.GenericAuditContextHolder;
 import kraheja.commons.utils.CommonConstraints;
 import java.util.stream.Collectors;

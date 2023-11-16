@@ -32,6 +32,7 @@ public class InfrBillDBResponse {
 	private LocalDate infrTodate;
 	private double infrAmtos;
 	private double infrArrears;
+	private double infrIntarrears;
 	private double infrInterest;
 	private double infrAdmincharges;
 	private double infrCgst;

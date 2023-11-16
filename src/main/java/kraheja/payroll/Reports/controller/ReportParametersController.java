@@ -52,6 +52,12 @@ public class ReportParametersController {
 	public ResponseEntity<?> grossSalaryDetExcelCreation(String paymonthfrom){
 		return this.reportParametersService.gorssSalaryDetExcelCreation(paymonthfrom);
 	}
+
+	@GetMapping("/employeewise-monthly-summary-pt")
+	public ResponseEntity<?> empwiseMonthlySummaryPT(String coyCode, String deptCodes,
+			String empCodes, String salaryTypes, String paymonth, String paymentDate, String empType ){
+		return this.reportParametersService.empwiseMonthlySummaryPT(coyCode, deptCodes, empCodes, salaryTypes, paymonth, paymentDate,  empType);
+	}
 	
 	
 }

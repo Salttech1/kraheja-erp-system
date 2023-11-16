@@ -236,98 +236,97 @@ public class AdmbillhServiceImpl implements AdmbillhService {
 		return ResponseEntity.ok(ServiceResponseBean.builder().status(Boolean.TRUE).data(totPaidAdvn).build());
 	}
 
-	private List<ActrandBean> insActrand(Integer bunumCounter, MaterialPaymentRequestBean materialPaymentRequestBean,
-			AccountingBean accoutingDataForTran, AccountingBean accoutingDataForContraTran,
-			AccountingBean accoutingDataCashFlow, AccountingBean accoutingDataCashFlowForContra, Double tranamt,
-			String bldgcode, String property, String ser, String trantype, String doctype, String docnum,
-			String docdate, String narrative) {
-		List<ActrandBean> actrandBeanList = new ArrayList<>();
-		String narrationMsg;
-		String exnNarrationMsg = "";
-		if (Objects.nonNull(materialPaymentRequestBean.getMatname()) && (materialPaymentRequestBean.getMatname().trim()
-				.concat(CommonConstraints.INSTANCE.SPACE_STRING).concat(narrative)).length() < 40) {
-			narrationMsg = materialPaymentRequestBean.getMatname().trim()
-					.concat(CommonConstraints.INSTANCE.SPACE_STRING).concat(narrative);
-		} else {
-			narrationMsg = materialPaymentRequestBean.getMatname();
-			exnNarrationMsg = narrative;
-		}
-		for (int i = 1; i <= 2; i++) {
-			if (i % 2 == 1) {
-				actrandBeanList.add(ActrandBean.builder().transer(ser).bunum(bunumCounter).trantype(trantype)
-						.trandate(LocalDate.now().format(CommonConstraints.INSTANCE.DDMMYYYY_FORMATTER)).ledgcode("PL")
-						.proprietor(materialPaymentRequestBean.getProp())
-						.coy(materialPaymentRequestBean.getCoy().trim())
-						.mintype(StringUtils.isNotEmpty(accoutingDataForTran.getMinType())
-								? accoutingDataForTran.getMinType()
-								: CommonConstraints.INSTANCE.SPACE_STRING)
-						.partytype(accoutingDataForTran.getPartyType()).partycode(accoutingDataForTran.getPartyCode())
-						.acmajor(accoutingDataForTran.getAcMajor())
-						.acminor(StringUtils.isNotEmpty(accoutingDataForTran.getAcminor())
-								? accoutingDataForTran.getAcminor()
-								: CommonConstraints.INSTANCE.SPACE_STRING)
-						.mincode(accoutingDataForTran.getMinCode()).vounum(materialPaymentRequestBean.getAuthnum())
-						.voudate(materialPaymentRequestBean.getAuthdate()).tranamt(tranamt).narrative(narrationMsg)
-						.project(accoutingDataForTran.getProject()).period(CommonConstraints.INSTANCE.BLANK_STRING)
-						.property(property).bldgcode(bldgcode).domain("M")
-						.matgroup(materialPaymentRequestBean.getMatgroup()).cfgroup(accoutingDataCashFlow.getCfGroup())
-						.cfcode(accoutingDataCashFlow.getCfCode()).doctype(doctype).docnum(docnum).docdate(docdate)
-						.docpartype(PartyType.S.toString()).docparcode(materialPaymentRequestBean.getPartycode())
-						// X columns (Contra entry)
-						.xproject(accoutingDataForContraTran.getProject())
-						.xacmajor(accoutingDataForContraTran.getAcMajor())
-						.xacminor(accoutingDataForContraTran.getAcminor())
-						.xmintype(accoutingDataForContraTran.getMinType())
-						.xpartycode(accoutingDataForContraTran.getPartyCode())
-						.xpartytype(accoutingDataForContraTran.getPartyType()).xreftranser(ser)
-						.xrefbunum(bunumCounter + 1)
-						.xreftrandate(LocalDate.now().format(CommonConstraints.INSTANCE.DDMMYYYY_FORMATTER))
-						.site(GenericAuditContextHolder.getContext().getSite())
-						.userid(GenericAuditContextHolder.getContext().getUserid()).today(LocalDateTime.now()).build());
-			} else {
-				actrandBeanList.add(ActrandBean.builder().transer(ser).bunum(bunumCounter + 1).trantype(trantype)
-						.trandate(LocalDate.now().format(CommonConstraints.INSTANCE.DDMMYYYY_FORMATTER)).ledgcode("PL")
-						.proprietor(materialPaymentRequestBean.getProp())
-						.coy(materialPaymentRequestBean.getCoy().trim())
-						.mintype(StringUtils.isNotEmpty(accoutingDataForContraTran.getMinType())
-								? accoutingDataForContraTran.getMinType()
-								: CommonConstraints.INSTANCE.SPACE_STRING)
-						.mincode(accoutingDataForContraTran.getMinCode())
-						.partytype(accoutingDataForContraTran.getPartyType())
-						.partycode(accoutingDataForContraTran.getPartyCode())
-						.project(accoutingDataForContraTran.getProject())
-						.acminor(StringUtils.isNotEmpty(accoutingDataForContraTran.getAcminor())
-								? accoutingDataForContraTran.getAcminor()
-								: CommonConstraints.INSTANCE.SPACE_STRING)
-						.acmajor(accoutingDataForContraTran.getAcMajor())
-						.vounum(materialPaymentRequestBean.getAuthnum())
-						.voudate(materialPaymentRequestBean.getAuthdate()).tranamt(tranamt * -1)
-						.period(CommonConstraints.INSTANCE.BLANK_STRING).narrative(narrationMsg)
-						.project(accoutingDataForContraTran.getProject()).bldgcode(bldgcode).property(property)
-						.domain("M").matgroup(materialPaymentRequestBean.getMatgroup())
-						.cfgroup(accoutingDataCashFlowForContra.getCfGroup())
-						.cfcode(accoutingDataCashFlowForContra.getCfCode()).doctype(doctype).docnum(docnum)
-						.docdate(docdate).docpartype(PartyType.S.toString())
-						.docparcode(materialPaymentRequestBean.getPartycode())
-						// X columns (Contra entry)
-						.xreftranser(ser).xacminor(accoutingDataForTran.getAcminor())
-						.xacmajor(accoutingDataForTran.getAcMajor()).xmintype(accoutingDataForTran.getMinType())
-						.xpartycode(accoutingDataForTran.getPartyCode()).xproject(accoutingDataForTran.getProject())
-						.xreftrandate(LocalDate.now().format(CommonConstraints.INSTANCE.DDMMYYYY_FORMATTER))
-						.xpartytype(accoutingDataForTran.getPartyType()).xrefbunum(bunumCounter)
-						.site(GenericAuditContextHolder.getContext().getSite())
-						.userid(GenericAuditContextHolder.getContext().getUserid()).today(LocalDateTime.now()).build());
-			}
-			if (StringUtils.isNotBlank(exnNarrationMsg))
-				this.exnarrRepository.save(ExnarrMapper.addExnarrMapper.apply(ExnarrBean.builder().transer(ser)
-						.bunum(bunumCounter.doubleValue()).coy(materialPaymentRequestBean.getCoy().trim())
-						.linenum(Double.valueOf(i)).narrtype("S").today(LocalDateTime.now())
-						.site(GenericAuditContextHolder.getContext().getSite())
-						.userid(GenericAuditContextHolder.getContext().getUserid()).exnarr(exnNarrationMsg).build()));
-
-		}
-		return actrandBeanList;
-	}
+//	private List<ActrandBean> insActrand(Integer bunumCounter, AdmbillhRequestBean AdmbillhRequestBean,
+//			AccountingBean accoutingDataForTran, AccountingBean accoutingDataForContraTran,
+//			AccountingBean accoutingDataCashFlow, AccountingBean accoutingDataCashFlowForContra, Double tranamt,
+//			String bldgcode, String property, String ser, String trantype, String doctype, String docnum,
+//			String docdate, String narrative) {
+//		List<ActrandBean> actrandBeanList = new ArrayList<>();
+//		String narrationMsg;
+//		String exnNarrationMsg = "";
+//		if (Objects.nonNull(AdmbillhRequestBean.getMatname()) && (AdmbillhRequestBean.getMatname().trim()
+//				.concat(CommonConstraints.INSTANCE.SPACE_STRING).concat(narrative)).length() < 40) {
+//			narrationMsg = AdmbillhRequestBean.getMatname().trim()
+//					.concat(CommonConstraints.INSTANCE.SPACE_STRING).concat(narrative);
+//		} else {
+//			narrationMsg = AdmbillhRequestBean.getMatname();
+//			exnNarrationMsg = narrative;
+//		}
+//		for (int i = 1; i <= 2; i++) {
+//			if (i % 2 == 1) {
+//				actrandBeanList.add(ActrandBean.builder().transer(ser).bunum(bunumCounter).trantype(trantype)
+//						.trandate(LocalDate.now().format(CommonConstraints.INSTANCE.DDMMYYYY_FORMATTER)).ledgcode("PL")
+//						.coy(AdmbillhRequestBean.getCoy().trim())
+//						.mintype(StringUtils.isNotEmpty(accoutingDataForTran.getMinType())
+//								? accoutingDataForTran.getMinType()
+//								: CommonConstraints.INSTANCE.SPACE_STRING)
+//						.partytype(accoutingDataForTran.getPartyType()).partycode(accoutingDataForTran.getPartyCode())
+//						.acmajor(accoutingDataForTran.getAcMajor())
+//						.acminor(StringUtils.isNotEmpty(accoutingDataForTran.getAcminor())
+//								? accoutingDataForTran.getAcminor()
+//								: CommonConstraints.INSTANCE.SPACE_STRING)
+//						.mincode(accoutingDataForTran.getMinCode()).vounum(AdmbillhRequestBean.getAuthnum())
+//						.voudate(AdmbillhRequestBean.getAuthdate()).tranamt(tranamt).narrative(narrationMsg)
+//						.project(accoutingDataForTran.getProject()).period(CommonConstraints.INSTANCE.BLANK_STRING)
+//						.property(property).bldgcode(bldgcode).domain("M")
+//						.matgroup(AdmbillhRequestBean.getMatgroup()).cfgroup(accoutingDataCashFlow.getCfGroup())
+//						.cfcode(accoutingDataCashFlow.getCfCode()).doctype(doctype).docnum(docnum).docdate(docdate)
+//						.docpartype(PartyType.S.toString()).docparcode(AdmbillhRequestBean.getPartycode())
+//						// X columns (Contra entry)
+//						.xproject(accoutingDataForContraTran.getProject())
+//						.xacmajor(accoutingDataForContraTran.getAcMajor())
+//						.xacminor(accoutingDataForContraTran.getAcminor())
+//						.xmintype(accoutingDataForContraTran.getMinType())
+//						.xpartycode(accoutingDataForContraTran.getPartyCode())
+//						.xpartytype(accoutingDataForContraTran.getPartyType()).xreftranser(ser)
+//						.xrefbunum(bunumCounter + 1)
+//						.xreftrandate(LocalDate.now().format(CommonConstraints.INSTANCE.DDMMYYYY_FORMATTER))
+//						.site(GenericAuditContextHolder.getContext().getSite())
+//						.userid(GenericAuditContextHolder.getContext().getUserid()).today(LocalDateTime.now()).build());
+//			} else {
+//				actrandBeanList.add(ActrandBean.builder().transer(ser).bunum(bunumCounter + 1).trantype(trantype)
+//						.trandate(LocalDate.now().format(CommonConstraints.INSTANCE.DDMMYYYY_FORMATTER)).ledgcode("PL")
+//						.proprietor(AdmbillhRequestBean.getProp())
+//						.coy(AdmbillhRequestBean.getCoy().trim())
+//						.mintype(StringUtils.isNotEmpty(accoutingDataForContraTran.getMinType())
+//								? accoutingDataForContraTran.getMinType()
+//								: CommonConstraints.INSTANCE.SPACE_STRING)
+//						.mincode(accoutingDataForContraTran.getMinCode())
+//						.partytype(accoutingDataForContraTran.getPartyType())
+//						.partycode(accoutingDataForContraTran.getPartyCode())
+//						.project(accoutingDataForContraTran.getProject())
+//						.acminor(StringUtils.isNotEmpty(accoutingDataForContraTran.getAcminor())
+//								? accoutingDataForContraTran.getAcminor()
+//								: CommonConstraints.INSTANCE.SPACE_STRING)
+//						.acmajor(accoutingDataForContraTran.getAcMajor())
+//						.vounum(AdmbillhRequestBean.getAuthnum())
+//						.voudate(AdmbillhRequestBean.getAuthdate()).tranamt(tranamt * -1)
+//						.period(CommonConstraints.INSTANCE.BLANK_STRING).narrative(narrationMsg)
+//						.project(accoutingDataForContraTran.getProject()).bldgcode(bldgcode).property(property)
+//						.domain("M").matgroup(AdmbillhRequestBean.getMatgroup())
+//						.cfgroup(accoutingDataCashFlowForContra.getCfGroup())
+//						.cfcode(accoutingDataCashFlowForContra.getCfCode()).doctype(doctype).docnum(docnum)
+//						.docdate(docdate).docpartype(PartyType.S.toString())
+//						.docparcode(AdmbillhRequestBean.getPartycode())
+//						// X columns (Contra entry)
+//						.xreftranser(ser).xacminor(accoutingDataForTran.getAcminor())
+//						.xacmajor(accoutingDataForTran.getAcMajor()).xmintype(accoutingDataForTran.getMinType())
+//						.xpartycode(accoutingDataForTran.getPartyCode()).xproject(accoutingDataForTran.getProject())
+//						.xreftrandate(LocalDate.now().format(CommonConstraints.INSTANCE.DDMMYYYY_FORMATTER))
+//						.xpartytype(accoutingDataForTran.getPartyType()).xrefbunum(bunumCounter)
+//						.site(GenericAuditContextHolder.getContext().getSite())
+//						.userid(GenericAuditContextHolder.getContext().getUserid()).today(LocalDateTime.now()).build());
+//			}
+//			if (StringUtils.isNotBlank(exnNarrationMsg))
+//				this.exnarrRepository.save(ExnarrMapper.addExnarrMapper.apply(ExnarrBean.builder().transer(ser)
+//						.bunum(bunumCounter.doubleValue()).coy(AdmbillhRequestBean.getCoy().trim())
+//						.linenum(Double.valueOf(i)).narrtype("S").today(LocalDateTime.now())
+//						.site(GenericAuditContextHolder.getContext().getSite())
+//						.userid(GenericAuditContextHolder.getContext().getUserid()).exnarr(exnNarrationMsg).build()));
+//
+//		}
+//		return actrandBeanList;
+//	}
 
 	@SuppressWarnings("unchecked")
 	@Override

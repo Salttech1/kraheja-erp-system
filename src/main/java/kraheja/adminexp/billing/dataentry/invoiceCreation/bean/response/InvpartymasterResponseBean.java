@@ -1,4 +1,4 @@
-package kraheja.adminexp.billing.dataentry.bean.response;
+package kraheja.adminexp.billing.dataentry.invoiceCreation.bean.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
