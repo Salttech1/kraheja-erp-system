@@ -26,7 +26,7 @@ public class AdmbillhController {
 
 	@GetMapping("/fetch-admbillh-by-Ser")
 	public ResponseEntity<?> fetchAdmbillhBySer(@RequestParam(value = "ser") String  ser) {
-		return this.admbillhService.fetchAdmbillhBySer(ser) ; 
+		return this.admbillhService.fetchAdmbillhBySer(ser.trim()) ; 
 	}
 
 	@PostMapping("/add-admbillh")
@@ -38,10 +38,15 @@ public class AdmbillhController {
 	public ResponseEntity<?> updateAdmbillh(@Valid @RequestBody AdmbillhRequestBean admbillhRequestBean) throws ParseException {
 		return this.admbillhService.updateAdmbillh(admbillhRequestBean);
 	}
-//
-//	@GetMapping("/check-Ser-exists")
-//	public ResponseEntity<?> checkSerExists(@RequestParam(value = "ser") String  ser)  {
-//		return this.admbillhService.checkSerExists(ser);
-//	}
+
+	@GetMapping("/fetch-advance-paid-detail")
+	public ResponseEntity<?> fetchAdvancePaidDetail(String partyCode, String buildingCode, String coy,String advnAdjust, String tranMode){
+		return this.admbillhService.fetchAdvancePaidDetail(partyCode, buildingCode, coy,Double.valueOf(advnAdjust), tranMode );
+	}
+	
+	@GetMapping("/check-Ser-exists")
+	public ResponseEntity<?> checkSerExists(@RequestParam(value = "ser") String  ser)  {
+		return this.admbillhService.checkserExists(ser);
+	}
 
 }

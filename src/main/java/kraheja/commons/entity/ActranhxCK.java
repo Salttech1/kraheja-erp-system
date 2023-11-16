@@ -33,4 +33,8 @@ public class ActranhxCK implements Serializable{
 	@Column
 	@Type(type = "kraheja.commons.utils.CharType") 
 	private String acthTranser ; 
+	
+	@Column
+	@Type(type = "kraheja.commons.utils.CharType")
+	private String acthCoy;
 }

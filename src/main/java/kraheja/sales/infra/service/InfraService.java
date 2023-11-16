@@ -10,4 +10,10 @@ public interface InfraService {
 	ResponseEntity<?> addIntoInfraDefaultersListTempTable(InfraDefaultersListRequestBean infraDefaultersListRequestBean);
 
 	ResponseEntity<?> deleteInfraDefaultersListFromSessionId(Integer sessionId);
+	
+	ResponseEntity<?> fetchGstFlag(String recNum);
+	
+	ResponseEntity<?> fetchCarParks(String bldgCode , String wing, String flatNo);
+
+	ResponseEntity<?> fetchAdvanceFlag(String bldgCode , String wing, String flatNo,String recNum,String gstYN);
 }

@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import kraheja.commons.utils.CommonConstraints;
+import kraheja.commons.utils.CommonUtils;
 import kraheja.payroll.bean.ComputationDetailRequestBean;
 import kraheja.payroll.masterdetail.service.EmployeeDetailsEntryEditService;
 import lombok.extern.slf4j.Slf4j;
@@ -27,5 +29,19 @@ public class MasterDetailController {
 		return this.employeeDetailsEntryEditService.fetchEmplDetails(empcode) ;
 	}
 	
+	@GetMapping("/salarypackageDetail")
+	public ResponseEntity<?> fetchAllSalaryPackage(String empcode,Character currentAll) throws Exception{
+		return this.employeeDetailsEntryEditService.fetchAllSalaryPackage(empcode,currentAll) ;
+	}
+	
+	@GetMapping("/companypackageDetails")
+	public ResponseEntity<?> fetchCompanySalPackage(String coycode){
+		return this.employeeDetailsEntryEditService.fetchCompanySalPackage(coycode,CommonConstraints.INSTANCE.closeDate);
+	}
+	
+	@GetMapping("/companypackageDedDetails")
+	public ResponseEntity<?> fetchCompanySalDedPackage(String coycode){
+		return this.employeeDetailsEntryEditService.fetchCompanySalDedPackage(coycode,CommonConstraints.INSTANCE.closeDate);
+	}
 	
 }	

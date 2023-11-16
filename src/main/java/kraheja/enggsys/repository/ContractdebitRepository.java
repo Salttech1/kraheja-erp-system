@@ -3,6 +3,7 @@ package kraheja.enggsys.repository;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -33,5 +34,9 @@ public interface ContractdebitRepository extends JpaRepository<Contractdebit, Co
 	
 	@Query("Select sum(cd.ccdDebitAmount) From  Contractdebit cd   where trim(cd.ccdDebittype) = :debitType and trim(cd.ccdAuthnum) = :authnum")
 	Double findSumOfDebitAmountByDebitTypeAndAuthnum(String debitType, String authnum);
+	
+	@Modifying
+	@Query("Delete from Contractdebit a where trim(a.ccdAuthnum) = :authNum")
+	void deleteContractdebitByAuthNum(String authNum);
 
 }

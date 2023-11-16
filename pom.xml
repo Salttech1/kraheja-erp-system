@@ -19,6 +19,33 @@
 		<spring-cloud-starter-openfeign.version>3.1.5</spring-cloud-starter-openfeign.version>
 	</properties>
 	<dependencies>
+		<!-- https://mvnrepository.com/artifact/jakarta.validation/jakarta.validation-api -->
+		<dependency>
+		    <groupId>jakarta.validation</groupId>
+		    <artifactId>jakarta.validation-api</artifactId>
+		    <version>3.0.2</version>
+		</dependency>
+
+
+		<dependency>
+   			 <groupId>com.oracle.database.jdbc</groupId>
+   	 		<artifactId>ojdbc8</artifactId> <!-- Use the appropriate version -->
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-logging</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-log4j2</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
@@ -98,11 +125,6 @@
 			<artifactId>pdfbox</artifactId>
 			<version>2.0.27</version>
 		</dependency>
-		<!-- Websocket -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-websocket</artifactId>
-		</dependency>
 		<!-- Swagger UI -->
 		<dependency>
 			<groupId>io.springfox</groupId>
@@ -113,6 +135,11 @@
 			<groupId>io.springfox</groupId>
 			<artifactId>springfox-swagger-ui</artifactId>
 			<version>2.9.2</version>
+		</dependency>
+		<!-- Websocket -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-websocket</artifactId>
 		</dependency>
 		<!-- Apache POI for excel -->
 		<dependency>
@@ -126,32 +153,45 @@
 			<artifactId>spring-cloud-starter-openfeign</artifactId>
 			<version>${spring-cloud-starter-openfeign.version}</version>
 		</dependency>
+
 		<dependency>
 			<groupId>io.github.openfeign</groupId>
 			<artifactId>feign-okhttp</artifactId>
 			<version>12.1</version>
 		</dependency>
+
 		<dependency>
 			<groupId>io.github.openfeign</groupId>
 			<artifactId>feign-httpclient</artifactId>
 			<version>12.1</version>
 		</dependency>
+
 		<!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
 			<version>2.11.0</version>
 		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
 		<dependency>
-			<groupId>commons</groupId>
-			<artifactId>lang</artifactId>
-			<version>2.1</version>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>2.11.0</version>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/commons-lang/commons-lang -->
 		<dependency>
-			<groupId>cvom</groupId>
-			<artifactId>cvom</artifactId>
-			<version>1.0</version>
+		    <groupId>commons-lang</groupId>
+		    <artifactId>commons-lang</artifactId>
+		    <version>2.6</version>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.json/json -->
+		<dependency>
+		    <groupId>org.json</groupId>
+		    <artifactId>json</artifactId>
+		    <version>20230618</version>
+		</dependency>
+		
 	</dependencies>
 	<build>
 		<plugins>

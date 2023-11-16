@@ -1,9 +1,12 @@
 package kraheja.payroll.Reports.controller;
 
 
+import java.util.ArrayList;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -22,6 +25,38 @@ public class ReportParametersController {
 	@GetMapping("/reportparameters")
 	public ResponseEntity<?> ReportParameters(){
 		return this.reportParametersService.GetReportParameters();
+	}
+	
+	@GetMapping("/export-pf-report")
+	public ResponseEntity<?> pfExcelCreation(String comanyCode, String paymonth){
+		return this.reportParametersService.pfExcelCreation(comanyCode,paymonth);
+	}
+	
+	@GetMapping("/employeewise-monthly-summary")
+	public ResponseEntity<?> empwiseMonthlySummary(String coyCode, String deptCodes,
+			String empCodes, String salaryTypes, String paymonth, String paymentDate, String empType ){
+		return this.reportParametersService.empwiseMonthlySummary(coyCode, deptCodes, empCodes, salaryTypes, paymonth, paymentDate,  empType);
+	}
+	
+	@GetMapping("/gratuity-form")
+	public ResponseEntity<?> gratuityForm(String templateFileWithPath, String[][] fieldsList){
+		return this.reportParametersService.gratuityForm(templateFileWithPath, fieldsList);
+	}
+	
+	@GetMapping("/export-socsalarydet") 
+	public ResponseEntity<?> socSalaryDetExcelCreation(String empCodes, String paymonthfrom, String paymonthto){
+		return this.reportParametersService.socSalaryDetExcelCreation(empCodes,paymonthfrom,paymonthto);
+	}
+
+	@GetMapping("/export-grosssalary") 
+	public ResponseEntity<?> grossSalaryDetExcelCreation(String paymonthfrom){
+		return this.reportParametersService.gorssSalaryDetExcelCreation(paymonthfrom);
+	}
+
+	@GetMapping("/employeewise-monthly-summary-pt")
+	public ResponseEntity<?> empwiseMonthlySummaryPT(String coyCode, String deptCodes,
+			String empCodes, String salaryTypes, String paymonth, String paymentDate, String empType ){
+		return this.reportParametersService.empwiseMonthlySummaryPT(coyCode, deptCodes, empCodes, salaryTypes, paymonth, paymentDate,  empType);
 	}
 	
 	

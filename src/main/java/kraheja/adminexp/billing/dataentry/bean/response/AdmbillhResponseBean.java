@@ -67,6 +67,6 @@ public class AdmbillhResponseBean {
 	private List<AdmbilldResponseBean> admbilldResponseBeanList;
 	private List<AdmbillhResponseBean> admbillhResponseBeanList;
 	private List<AdmadvanceResponseBean> admadvanceResponseBeanList;
-	AddressResponseBean addressResponseBean;
+	private AddressResponseBean addressResponseBean;
 
 }                  

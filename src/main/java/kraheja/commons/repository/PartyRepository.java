@@ -1,5 +1,6 @@
 package kraheja.commons.repository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -30,4 +31,10 @@ public interface PartyRepository extends JpaRepository<Party, PartyCK>, CrudRepo
 	@Query("SELECT e FROM Party e WHERE trim(e.partyCk.parPartycode) = :partycode AND trim(e.partyCk.parPartytype) = :partytype " +
             "AND (Upper(e.parPartyname) like '%LTD%' or upper(e.parPartyname) like '%LIMITED%' )")
 	Party findLimitedPartyByCode(String partycode, String partytype);
+	
+	@Query("Select e FROM Party e WHERE trim(e.partyCk.parPartycode) = :partyCode AND  e.partyCk.parPartytype =:partyType AND e.parOpendate<=:billDate AND (e.partyCk.parClosedate >= :billDate or e.partyCk.parClosedate is null) ")
+	Party findByPartyCodeAndParPartytypeAndBillDate(String partyCode, String partyType , LocalDate billDate);
+
+	@Query("select max(p.partyCk.parPartycode) from Party p where trim(p.partyCk.parPartycode) LIKE :partyCode and p.partyCk.parPartytype =:partyType")
+	String getPartyCode(String partyCode,String partyType);
 }

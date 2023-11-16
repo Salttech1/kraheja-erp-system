@@ -12,6 +12,6 @@ public interface EmpleaveinfoRepository extends JpaRepository<Empleaveinfo, Empl
 	 
 	Empleaveinfo findByEmpleaveinfoCK_ElinEmpcodeAndEmpleaveinfoCK_ElinLeavecodeAndEmpleaveinfoCK_ElinAcyear(String empcode, String leavecode, String acyear) ; 
 	
-	List<Empleaveinfo> findByEmpleaveinfoCK_ElinEmpcode(String empcode) ;
+	List<Empleaveinfo> findByEmpleaveinfoCK_ElinEmpcodeOrderByEmpleaveinfoCK_ElinAcyearDesc(String empcode) ;
 
 }

@@ -128,18 +128,39 @@ public class FDReportServiceImpl implements FDReportService {
 		else {
 			dateCondition = CommonConstraints.INSTANCE.GREATERTHAN_STRING;
 		}
+//		following formate was for PNB changes done by kalpana on 10/10/2023
+//		sqlQuery = "SELECT  DIN_DEPOSITOR, "
+//				+ "LTRIM('".concat(neftReportRequestBean.getCompanyBankAc()).concat("') as AccountNo, ")
+//				+ "sum(din.DIN_INTEREST)-sum(din.DIN_tds) as Amt, "
+//				+ "'FD Int' as TranParticular, "
+//				+ "(select par_payeeifsc1 from party where trim(par_partycode) = Trim(din.DIN_COY)||Trim(din.DIN_DEPOSITOR) and par_partytype = 'D') as ifsc, "
+//				+ "(select LTRIM(par_payeeacnum1) from party where trim(par_partycode) = Trim(din.DIN_COY)||Trim(din.DIN_DEPOSITOR) and par_partytype = 'D') as acnum, "
+//				+ "Replace(Replace(Replace(upper(Replace(Trim(dep.DEPTR_NAME),'(', '')),')',''),'.',''),'`','') as Names, "
+//				+ "'MUMBAI' as ADDR1, 'Unique FD Int' as SenderInfo1,  'Unique FD Int' as SenderInfo2, "
+//				+ "LTRIM('".concat(neftReportRequestBean.getCompanyBankAc()).concat( "') as chargeacc, ")
+//				+ "'".concat(neftReportRequestBean.getChequeAlpha()).concat("' as chequeAlpha, ")
+//				+ "LTRIM(TO_CHAR('".concat(neftReportRequestBean.getChequeNum()).concat("','000000')) as ChequeNo, ")
+//				+ "LTRIM(TO_CHAR('".concat(neftReportRequestBean.getChequeDate()).concat("','00000000')) as ChequeDate ")
+//				+ "FROM DEPINT din,DEPOSITOR dep "
+//				+ "where din.DIN_COY = dep.DEPTR_COY "
+//				+ "and din.DIN_DEPOSITOR = dep.DEPTR_DEPOSITOR " 
+//				+ "and din.DIN_coy='".concat(neftReportRequestBean.getCompanyCode().trim()).concat("' ")
+//				+ "and din.DIN_INTFROM >= to_date('" + neftReportRequestBean.getFromDate().trim() +"','dd/MM/yyyy') "
+//				+ "and din.DIN_INTUPTO ".concat(dateCondition).concat("= to_date('".concat(neftReportRequestBean.getToDate().trim()).concat("','dd/MM/yyyy') "))
+//				+ "and din.DIN_SESSID is not null "
+//				+ "and (select substr(par_payeeifsc1,1,4) from party where trim(par_partycode) = Trim(din.DIN_COY)||Trim(din.DIN_DEPOSITOR) and par_partytype = 'D') ".concat(neftReportRequestBean.getBankString()).concat(depositorCondition)
+//				+ " group by  DIN_DEPOSITOR,Replace(Replace(Replace(upper(Replace(Trim(dep.DEPTR_NAME),'(', '')),')',''),'.',''),'`',''),Trim(din.DIN_COY)||Trim(din.DIN_DEPOSITOR) "
+//				+ " order by DIN_DEPOSITOR ";	
+		
+//		following formate is for Indian Bank
 		sqlQuery = "SELECT  DIN_DEPOSITOR, "
-				+ "LTRIM('".concat(neftReportRequestBean.getCompanyBankAc()).concat("') as AccountNo, ")
-				+ "sum(din.DIN_INTEREST)-sum(din.DIN_tds) as Amt, "
-				+ "'FD Int' as TranParticular, "
-				+ "(select par_payeeifsc1 from party where trim(par_partycode) = Trim(din.DIN_COY)||Trim(din.DIN_DEPOSITOR) and par_partytype = 'D') as ifsc, "
-				+ "(select LTRIM(par_payeeacnum1) from party where trim(par_partycode) = Trim(din.DIN_COY)||Trim(din.DIN_DEPOSITOR) and par_partytype = 'D') as acnum, "
-				+ "Replace(Replace(Replace(upper(Replace(Trim(dep.DEPTR_NAME),'(', '')),')',''),'.',''),'`','') as Names, "
-				+ "'MUMBAI' as ADDR1, 'Unique FD Int' as SenderInfo1,  'Unique FD Int' as SenderInfo2, "
-				+ "LTRIM('".concat(neftReportRequestBean.getCompanyBankAc()).concat( "') as chargeacc, ")
-				+ "'".concat(neftReportRequestBean.getChequeAlpha()).concat("' as chequeAlpha, ")
-				+ "LTRIM(TO_CHAR('".concat(neftReportRequestBean.getChequeNum()).concat("','000000')) as ChequeNo, ")
-				+ "LTRIM(TO_CHAR('".concat(neftReportRequestBean.getChequeDate()).concat("','00000000')) as ChequeDate ")
+				+ "(select LTRIM(par_payeeacnum1) from party where trim(par_partycode) = Trim(din.DIN_COY)||Trim(din.DIN_DEPOSITOR) and par_partytype = 'D') as BeneficiaryAccount, "
+				+ "sum(din.DIN_INTEREST)-sum(din.DIN_tds) as AmountToBeCredited, "
+				+ "0 as CommissionAmount, "
+				+ "(select par_payeeifsc1 from party where trim(par_partycode) = Trim(din.DIN_COY)||Trim(din.DIN_DEPOSITOR) and par_partytype = 'D') as ValidIFSCCode , "
+				+ "'Interest' as Details, "
+				+ "Replace(Replace(Replace(upper(Replace(Trim(dep.DEPTR_NAME),'(', '')),')',''),'.',''),'`','') as BeneficiaryName, "
+				+ "(select adr_phoneoff from address where Trim(adr_adowner) = Trim(din.DIN_COY)||Trim(din.DIN_DEPOSITOR)) as ValidMobileNo "
 				+ "FROM DEPINT din,DEPOSITOR dep "
 				+ "where din.DIN_COY = dep.DEPTR_COY "
 				+ "and din.DIN_DEPOSITOR = dep.DEPTR_DEPOSITOR " 
@@ -147,11 +168,10 @@ public class FDReportServiceImpl implements FDReportService {
 				+ "and din.DIN_INTFROM >= to_date('" + neftReportRequestBean.getFromDate().trim() +"','dd/MM/yyyy') "
 				+ "and din.DIN_INTUPTO ".concat(dateCondition).concat("= to_date('".concat(neftReportRequestBean.getToDate().trim()).concat("','dd/MM/yyyy') "))
 				+ "and din.DIN_SESSID is not null "
-				+ "and (select substr(par_payeeifsc1,1,4) from party where trim(par_partycode) = Trim(din.DIN_COY)||Trim(din.DIN_DEPOSITOR) and par_partytype = 'D') ".concat(neftReportRequestBean.getBankString()).concat(depositorCondition)
 				+ " group by  DIN_DEPOSITOR,Replace(Replace(Replace(upper(Replace(Trim(dep.DEPTR_NAME),'(', '')),')',''),'.',''),'`',''),Trim(din.DIN_COY)||Trim(din.DIN_DEPOSITOR) "
 				+ " order by DIN_DEPOSITOR ";	
 		logger.debug("Query :: {}", sqlQuery);
-
+//		+ "and (select substr(par_payeeifsc1,1,4) from party where trim(par_partycode) = Trim(din.DIN_COY)||Trim(din.DIN_DEPOSITOR) and par_partytype = 'D') ".concat(neftReportRequestBean.getBankString()).concat(depositorCondition)
 		try {
 			File excelFile = ExcelUtils.INSTANCE.export(sqlQuery, dbUrl, dbUsername, dbPassword);
 

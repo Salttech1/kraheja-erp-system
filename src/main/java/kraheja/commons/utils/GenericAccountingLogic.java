@@ -29,7 +29,6 @@ import kraheja.commons.bean.response.ServiceResponseBean;
 import kraheja.commons.entity.Actrand;
 import kraheja.commons.entity.Actranh;
 import kraheja.commons.entity.Company;
-import kraheja.commons.enums.TranTypeEnum;
 import kraheja.commons.filter.GenericAuditContextHolder;
 import kraheja.commons.mappers.entityentity.ActrandxEntityEntityMapper;
 import kraheja.commons.mappers.entityentity.ActranhxEntityEntityMapper;
@@ -42,6 +41,7 @@ import kraheja.commons.repository.ActranhxRepository;
 import kraheja.commons.repository.CompanyRepository;
 import kraheja.commons.repository.EntityRepository;
 import kraheja.commons.repository.GlchartRepository;
+import kraheja.sales.bean.entitiesresponse.GlchartEntityResponse;
 
 @Component
 public class GenericAccountingLogic {
@@ -201,17 +201,19 @@ public class GenericAccountingLogic {
 	public static AccountingBean gatherMinorPartyDetails(String strPrmACMajor, String strPrmMinType, String strPrmMinCode, String strPrmPartyType, String strPrmPartyCode,String strPrmProject, String strPriAcminor) {
 		String strLocValidminyn, strLocValidminor, strLocPostProjOnly, strLocPostGLOnly;
 		Integer intLocTotMinor, intLocFoundRow, intLocTotParties;
+/**
+ * <p>CHANGED IT AS PER JAP GUID INSTATE OF STRING ARRAY.</p>
+ * */
+		GlchartEntityResponse glchartEntity = glchartRepository.findchartMinorAndchartPostByCharAcnum(strPrmACMajor);
+		LOGGER.info("glchartEntity: {} ",glchartEntity);
 
-		String glchartEntity = glchartRepository.findchartMinorAndchartPostByCharAcnum(strPrmACMajor);
-		LOGGER.info("test :: {} ",glchartEntity);
+//		String[] commaSepratedValuesFromGlchart = glchartEntity.split(CommonConstraints.INSTANCE.COMMA_STRING);
+//		LOGGER.info("EntityArray :: {}" + commaSepratedValuesFromGlchart);
 
-		String[] commaSepratedValuesFromGlchart = glchartEntity.split(CommonConstraints.INSTANCE.COMMA_STRING);
-		LOGGER.info("EntityArray :: {}" + commaSepratedValuesFromGlchart);
-
-		strLocValidminyn = !commaSepratedValuesFromGlchart[0].equals(" ") ? commaSepratedValuesFromGlchart[0] : null;
-		strLocValidminor = !commaSepratedValuesFromGlchart[1].equals(" ") ? commaSepratedValuesFromGlchart[1] : null;
-		strLocPostProjOnly = !commaSepratedValuesFromGlchart[2].equals(" ") ? commaSepratedValuesFromGlchart[2] : null;
-		strLocPostGLOnly = !commaSepratedValuesFromGlchart[3].equals(" ") ? commaSepratedValuesFromGlchart[3] : null;
+		strLocValidminyn = !glchartEntity.getChartMinoryn().equals("") ? glchartEntity.getChartMinoryn() : null;
+		strLocValidminor = !glchartEntity.getChartValidminors().equals("") ? glchartEntity.getChartValidminors() : null;
+		strLocPostProjOnly = !glchartEntity.getChartPostprojonly().equals("") ? glchartEntity.getChartPostprojonly() : null;
+		strLocPostGLOnly = !glchartEntity.getChartPostglonly().equals("") ? glchartEntity.getChartPostglonly() : null;
 
 		String partyTypeFromValidPartyView = "SELECT vpar_partytype FROM v_validparty WHERE  vpar_acmajor = '".concat(strPrmACMajor).concat("' AND vpar_partytype = '").concat(strPrmPartyType).concat("'");
 		List<Map<String,Object>> validPartyMapList = CommonResultsetGenerator.queryToResultSetBuilder(partyTypeFromValidPartyView);
@@ -388,7 +390,7 @@ public class GenericAccountingLogic {
 
 
 	public  void updateActranh(String tranSer, String tranDate, String ledgCode, String partyType, String partyCode, Double tranAmt, String vouNum, String vouDate,  
-			String postedYn, String balancedYn, String closingjvYn, String bbookYn, String cbookYn,	String narration, String coy, String clearacYn, String reverseYn, Boolean isUpdate) {
+			String postedYn, String balancedYn, String closingjvYn, String bbookYn, String cbookYn,	String narration, String coy, String clearacYn, String reverseYn,String tranType, Boolean isUpdate) {
 		Company companyEntity = companyRepository.findByCompanyCK_CoyCodeAndCompanyCK_CoyClosedate(coy, CommonUtils.INSTANCE.closeDate());
 		if(isUpdate) {
 			Actranh actranh = this.actranhRepository.findByActranhCK_ActhTranserAndActranhCK_ActhCoy(tranSer, coy);
@@ -423,7 +425,7 @@ public class GenericAccountingLogic {
 		}else {
 			actranhRepository.save(AddPojoEntityMapper.addActranhPojoEntityMapping.apply(new Object[] {ActranhBean.builder()
 					.transer(tranSer)
-					.trantype(TranTypeEnum.BA.toString())
+					.trantype(tranType)
 					.trandate(tranDate)	
 					.ledgcode(ledgCode)
 					.partytype(partyType)
@@ -459,7 +461,7 @@ public class GenericAccountingLogic {
 					.build();
 	}
 
-	public static List<ActrandBean>  InitialiseActrandBreakups(String tranType, String acMajor, String minType, String minCode, String partyType, String partyCode, String project, String acMinor, 
+	public static List<ActrandBean>  initialiseActrandBreakups(String tranType, String acMajor, String minType, String minCode, String partyType, String partyCode, String project, String acMinor, 
 			String xAcMajor, String xMinType, String xPartyType, String xPartyCode, String xProject, String xAcMinor, Double tranAmt, 
 			String bldgCode, String property,String uom, String tranDate,Integer bunumCounter, String narrationMsg, String transer, String ledgCode,
 			String prop, String coy, String vouNum, String vouDate, String period, String domain, String matgroup, String matcode, Double itemqty, String docnum, String docdate,

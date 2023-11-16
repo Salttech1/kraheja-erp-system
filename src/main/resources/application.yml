@@ -1,10 +1,11 @@
 spring:
   application:
     name: ${SPRING_APPLICATION_NAME:kraheja-service}
-  #profiles.active: dev
+  profiles.active: mumbaitest
   mvc:
     pathmatch:
-        matching-strategy: ant_path_matcher
+        matching-strategy: ANT_PATH_MATCHER
+    
     hikari: 
      minimum-idle: ${hikari_minimum_idle:2}
      maximum-pool-size: ${hikari_maximum_pool_size:10}
@@ -20,13 +21,13 @@ spring:
     hibernate:
       use-new-id-generator-mappings: false
       ddl-auto: none
-    #database-platform: org.hibernate.dialect.Oracle12cDialect
-    properties:
-      hibernate:
-        show_sql: true
-        proc:
-          param_null_passing: true
-          spring:
+    database-platform: org.hibernate.dialect.Oracle12cDialect
+#    properties:
+#      hibernate:
+#        show_sql: true
+#        proc:
+#          param_null_passing: true
+#          spring:
 #DO NOT CHANGE DDL-AUTO SETTING
 
 ---
@@ -48,9 +49,9 @@ password:
   expiry: 10
   
 permitted:
-  filters: /register,/h2-console/**,/report/**,/swagger-ui/**,/passwd/**,/certificate/**,/payroll/**,/test/**
-  resources: /images/**,/js/**,/webjars/**,/index,html,/report/**,/v2/api-docs,/configuration/ui,/swagger-resources/**,/configuration/security,/swagger-ui.html,/building/**, /project/**,/purchase-bills/**,inspolendorsement/**,/admexph/**,/party/**,/inspolicy/**,/payroll/**,/test/**,/payrollreports/**
-  
+  filters: /register,/h2-console/**,/report/**,/swagger-ui/**
+#  resources: /images/**,/js/**,/webjars/**,/index,html,/report/**,/v2/api-docs,/configuration/ui,/swagger-resources/**,/configuration/security,/swagger-ui.html
+  resources: /** 
 cors:
   allowed:
     domains: http://localhost:4200/,http://192.168.55.108:4200/,http://192.168.55.13:4200/,http://192.168.55.124:4200/,http://localhost:4201/,http://192.168.55.108:4201/,http://192.168.55.13:4201/,http://192.168.55.124:4201/
@@ -64,9 +65,9 @@ swagger2:
     name: KRAHEJA
     url:
     email:
-#logging:
-# level:
-#    org.hibernate.SQL: DEBUG
+logging:
+ level:
+    org.hibernate.SQL: DEBUG
 #    org.hibernate.type: TRACE
 
 ---
@@ -96,3 +97,4 @@ spring:
     activate:
         on-profile: pureng
     import: classpath:application-pureng.yml
+    

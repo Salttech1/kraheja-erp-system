@@ -1,34 +1,24 @@
 package kraheja.payroll.masterdetail.service.impl;
 
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.imageio.ImageIO;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.persistence.Tuple;
 import javax.transaction.Transactional;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import io.swagger.models.properties.StringProperty.Format;
-import kraheja.adminexp.vehicleexp.dataentry.bean.response.UnPostedCertBean;
 import kraheja.commons.bean.response.ServiceResponseBean;
 import kraheja.commons.entity.Address;
 import kraheja.commons.enums.AdSegment;
@@ -36,8 +26,9 @@ import kraheja.commons.enums.AdType;
 import kraheja.commons.mappers.pojoentity.AddressMapper;
 import kraheja.commons.repository.AddressRepository;
 import kraheja.commons.utils.CommonConstraints;
-import kraheja.commons.utils.CommonUtils;
+import kraheja.payroll.bean.CoysalarypackageBean;
 import kraheja.payroll.bean.EmployeeDetailsResponseBean;
+import kraheja.payroll.bean.EmployeeSalDetailsResponseBean;
 import kraheja.payroll.bean.EmpsalarypackageEarnDedBean;
 import kraheja.payroll.entity.Empassetinfo;
 import kraheja.payroll.entity.Empeducation;
@@ -47,7 +38,6 @@ import kraheja.payroll.entity.Empjobinfo;
 import kraheja.payroll.entity.Empleaveinfo;
 import kraheja.payroll.entity.Emppersonal;
 import kraheja.payroll.entity.Empreference;
-import kraheja.payroll.entity.Empsalarypackage;
 import kraheja.payroll.entity.Empschemeinfo;
 import kraheja.payroll.masterdetail.mappers.EmpassetinfoEntityPojoMapper;
 import kraheja.payroll.masterdetail.mappers.EmpeducationEntityPojoMapper;
@@ -57,7 +47,6 @@ import kraheja.payroll.masterdetail.mappers.EmpjobinfoEntityPojoMapper;
 import kraheja.payroll.masterdetail.mappers.EmpleaveinfoEntityPojoMapper;
 import kraheja.payroll.masterdetail.mappers.EmppersonalEntityPojoMapper;
 import kraheja.payroll.masterdetail.mappers.EmpreferenceEntityPojoMapper;
-import kraheja.payroll.masterdetail.mappers.EmpsalarypackageEntityPojoMapper;
 import kraheja.payroll.masterdetail.mappers.EmpschemeinfoEntityPojoMapper;
 import kraheja.payroll.masterdetail.service.EmployeeDetailsEntryEditService;
 import kraheja.payroll.repository.EmpassetinfoRepository;
@@ -123,7 +112,7 @@ public class EmployeeDetailsEntryEditServiceImpl implements EmployeeDetailsEntry
 		
 		//get emppersonal details
 		List<Emppersonal> emppersonallist = emppersonalRepository.findByEmppersonalCK_EperEmpcode(empcode);
-		if(CollectionUtils.isNotEmpty(emppersonallist))
+		if(CollectionUtils.isNotEmpty(emppersonallist)) {
 			employeeDetailsResponseBean.setEmppersonalResponseBean(EmppersonalEntityPojoMapper.fetchEmppersonalEntityPojoMapper.apply(emppersonallist));
 		
 		//get empeducation details
@@ -155,7 +144,8 @@ public class EmployeeDetailsEntryEditServiceImpl implements EmployeeDetailsEntry
 							t.get(11, String.class).trim(),
 							t.get(12, Timestamp.class).toLocalDateTime(),
 							t.get(13, String.class).trim(),
-							t.get(14, Character.class)
+							t.get(14, Character.class),
+							t.get(15, Character.class)
 							);
 					}
 							).collect(Collectors.toList());
@@ -182,7 +172,8 @@ public class EmployeeDetailsEntryEditServiceImpl implements EmployeeDetailsEntry
 							t.get(11, String.class).trim(),
 							t.get(12, Timestamp.class).toLocalDateTime(),
 							t.get(13, String.class).trim(),
-							t.get(14, Character.class)
+							t.get(14, Character.class),
+							t.get(15, Character.class)
 							);
 					}
 							).collect(Collectors.toList());
@@ -198,7 +189,7 @@ public class EmployeeDetailsEntryEditServiceImpl implements EmployeeDetailsEntry
 		}
 		
 		//get empleave details
-		List<Empleaveinfo> empleaveinfolist = empleaveinfoRepository.findByEmpleaveinfoCK_ElinEmpcode(empcode);
+		List<Empleaveinfo> empleaveinfolist = empleaveinfoRepository.findByEmpleaveinfoCK_ElinEmpcodeOrderByEmpleaveinfoCK_ElinAcyearDesc(empcode);
 		if(CollectionUtils.isNotEmpty( empschemeinfolist)) {
 			employeeDetailsResponseBean.setEmpleaveinfoResponseBean(EmpleaveinfoEntityPojoMapper.fetchEmpleaveinfoEntityPojoMapper.apply(empleaveinfolist));
 		}
@@ -242,7 +233,7 @@ public class EmployeeDetailsEntryEditServiceImpl implements EmployeeDetailsEntry
 			   empphotopath = CommonConstraints.INSTANCE.EMPPHOTOPATH + empcode.trim() + ".jpg";
 		    } else {
 		    	empphotopath = CommonConstraints.INSTANCE.EMPPHOTOPATH + "employee.jpg";
-		    } // Error message.
+		    } 
 
 		empPhoto = ImageToByteArray.imagetoblob(empphotopath);
 		employeeDetailsResponseBean.setEmpPhoto(empPhoto);
@@ -263,50 +254,205 @@ public class EmployeeDetailsEntryEditServiceImpl implements EmployeeDetailsEntry
 //		List<Object[]> newresultSet = newq.getResultList();
 //		logger.info("MonthGrossAmount :: {}", newresultSet);
 		
-		logger.info("Coy :: {}", empjobinfolist.get(0).getEjinCompany());
-		logger.info("Emptype :: {}",empjobinfolist.get(0).getEjinEmptype());
-		logger.info("Jobtype :: {}",empjobinfolist.get(0).getEjinJobtype());
-		
-		String MonthlyGrossQuery = employeeDetailsEntryEditRepository.GetMonthGrossQuery(empcode,empjobinfolist.get(0).getEjinCompany(),empjobinfolist.get(0).getEjinEmptype(),empjobinfolist.get(0).getEjinJobtype());
-		logger.info("MonthGrossQuery :: {}", MonthlyGrossQuery);
-		
-		Query newq = entityManager.createNativeQuery(MonthlyGrossQuery);
-		List<Object[]> newresultSet = newq.getResultList();
-		logger.info("MonthGrossAmount :: {}", newresultSet);
+//		logger.info("Coy :: {}", empjobinfolist.get(0).getEjinCompany());
+//		logger.info("Emptype :: {}",empjobinfolist.get(0).getEjinEmptype());
+//		logger.info("Jobtype :: {}",empjobinfolist.get(0).getEjinJobtype());
+//		
+//		String MonthlyGrossQuery = employeeDetailsEntryEditRepository.GetMonthGrossQuery(empcode,empjobinfolist.get(0).getEjinCompany(),empjobinfolist.get(0).getEjinEmptype(),empjobinfolist.get(0).getEjinJobtype());
+//		logger.info("MonthGrossQuery :: {}", MonthlyGrossQuery);
+//		
+//		Query newq = entityManager.createNativeQuery(MonthlyGrossQuery);
+//		List<Object[]> newresultSet = newq.getResultList();
+//		logger.info("MonthGrossAmount :: {}", newresultSet);
 		
 //		Double MonthlyGross = employeeDetailsEntryEditRepository.GetMonthGross(MonthlyGrossQuery);
 //		logger.info("MonthGrossAmount :: {}", MonthlyGross);
 		
+		if(CollectionUtils.isNotEmpty(emppersonallist)) {
 		Tuple empjobinfodetforpayformula = employeeDetailsEntryEditRepository.GetEmployeeJobinfoForFormula(empcode);
 		if(Objects.nonNull(empjobinfodetforpayformula)) {
 			String coy = empjobinfodetforpayformula.get(0, String.class).trim();
 			char emptype = empjobinfodetforpayformula.get(1, Character.class);
 			char jobtype = empjobinfodetforpayformula.get(2, Character.class);
-			logger.info("jobtype :: {}", jobtype);
-			logger.info("emptype :: {}", emptype);
-			logger.info("coy :: {}", coy);
-			String formula = employeeDetailsEntryEditRepository.GetFormula(coy, emptype, jobtype, "MTHLYGROSS");
+			String formulaMthlyGross = employeeDetailsEntryEditRepository.GetFormula(coy, emptype, jobtype, "MTHLYGROSS");
 			
-			Query q = entityManager.createNativeQuery(formula);
-			q.setParameter("empcode", empcode.trim());
-			List newresultSet1 = q.getResultList();
-			logger.info("MonthGrossAmount :: {}", newresultSet1);
-			employeeDetailsResponseBean.setMTHLYGROSS(newresultSet1);
+			Query queryMthlyGross = entityManager.createNativeQuery(formulaMthlyGross);
+			queryMthlyGross.setParameter("empcode", empcode.trim());
+			List mthlyGrossresultSet = queryMthlyGross.getResultList();
+			employeeDetailsResponseBean.setMTHLYGROSS(mthlyGrossresultSet);
 			
 			
 			String formulaCTC = employeeDetailsEntryEditRepository.GetFormula(coy, emptype, jobtype, "CTC");
-			Query q1 = entityManager.createNativeQuery(formulaCTC);
-			q1.setParameter("empcode", empcode.trim());
-			List newresultSet2 = q1.getResultList();
-			logger.info("CTC :: {}", newresultSet2);
-			employeeDetailsResponseBean.setCTC(newresultSet2);
+			Query queryCTC = entityManager.createNativeQuery(formulaCTC);
+			queryCTC.setParameter("empcode", empcode.trim());
+			List CTCresultSet = queryCTC.getResultList();
+			employeeDetailsResponseBean.setCTC(CTCresultSet);
 		}
-		
-		
+		}
+		} else {
+			return ResponseEntity.ok(ServiceResponseBean.builder().status(Boolean.FALSE).message("No record found for your Employee Code").build());
+		}
 		if(Objects.nonNull(employeeDetailsResponseBean)) {
 			return ResponseEntity.ok(ServiceResponseBean.builder().status(Boolean.TRUE).data(employeeDetailsResponseBean).build());	
 		}
 		return ResponseEntity.ok(ServiceResponseBean.builder().status(Boolean.FALSE).message("No record found for your Employee Code").build());
 	}
 
+	public ResponseEntity<?> fetchAllSalaryPackage(String empcode,Character currentAll){
+		EmployeeSalDetailsResponseBean employeeSalDetailsResponseBean = new EmployeeSalDetailsResponseBean();
+		if(currentAll == 'A') {
+		//get salarypackage details for earnings
+		List<Tuple> empsalarypackagelist = empsalarypackageRepository.findByAllEarnPackage(empcode);
+		if(empsalarypackagelist.size()>0) {
+			List<EmpsalarypackageEarnDedBean> empsalarypackageEarnDedBeanList = 
+					empsalarypackagelist.stream().map(t -> {return new EmpsalarypackageEarnDedBean(
+							t.get(0, String.class).trim(),
+							t.get(1, String.class).trim(),
+							t.get(2, Character.class),
+							t.get(3, Character.class),
+							t.get(4,  BigDecimal.class).doubleValue(),
+							t.get(5, Timestamp.class).toLocalDateTime().toLocalDate().format(CommonConstraints.INSTANCE.DDMMYYYY_FORMATTER).toString(),
+							t.get(6, Timestamp.class).toLocalDateTime().toLocalDate().format(CommonConstraints.INSTANCE.DDMMYYYY_FORMATTER).toString(),
+							t.get(7, String.class).trim(),
+							t.get(8, String.class).trim(),
+							t.get(9, String.class).trim(),
+							t.get(10, String.class).trim(),
+							t.get(11, String.class).trim(),
+							t.get(12, Timestamp.class).toLocalDateTime(),
+							t.get(13, String.class).trim(),
+							t.get(14, Character.class),
+							t.get(15, Character.class)
+							);
+					}
+							).collect(Collectors.toList());
+			logger.info("empsalarypackage_Kalpana :: {}", empsalarypackageEarnDedBeanList);
+			employeeSalDetailsResponseBean.setEmpsalarypackageResponseBean(empsalarypackageEarnDedBeanList);
+		}
+
+		//get salarypackage details for deductions
+		List<Tuple> empsalarypackagededlist = empsalarypackageRepository.findByAllDedPackage(empcode);
+		if(empsalarypackagededlist.size()>0) {
+			List<EmpsalarypackageEarnDedBean> empsalarypackageEarnDedBeanList = 
+					empsalarypackagededlist.stream().map(t -> {return new EmpsalarypackageEarnDedBean(
+							t.get(0, String.class).trim(),
+							t.get(1, String.class).trim(),
+							t.get(2, Character.class),
+							t.get(3, Character.class),
+							t.get(4,  BigDecimal.class).doubleValue(),
+							t.get(5, Timestamp.class).toLocalDateTime().toLocalDate().format(CommonConstraints.INSTANCE.DDMMYYYY_FORMATTER).toString(),
+							t.get(6, Timestamp.class).toLocalDateTime().toLocalDate().format(CommonConstraints.INSTANCE.DDMMYYYY_FORMATTER).toString(),
+							t.get(7, String.class).trim(),
+							t.get(8, String.class).trim(),
+							t.get(9, String.class).trim(),
+							t.get(10, String.class).trim(),
+							t.get(11, String.class).trim(),
+							t.get(12, Timestamp.class).toLocalDateTime(),
+							t.get(13, String.class).trim(),
+							t.get(14, Character.class),
+							t.get(15, Character.class)
+							);
+					}
+							).collect(Collectors.toList());
+			logger.info("empsalarypackage_Kalpana :: {}", empsalarypackageEarnDedBeanList);
+			employeeSalDetailsResponseBean.setEmpsalarypackagededResponseBean(empsalarypackageEarnDedBeanList);
+		}
+		} else {
+			//get salarypackage details for earnings
+			List<Tuple> empsalarypackagelist = empsalarypackageRepository.findByCurrentEarnPackage(empcode);
+			if(empsalarypackagelist.size()>0) {
+				List<EmpsalarypackageEarnDedBean> empsalarypackageEarnDedBeanList = 
+						empsalarypackagelist.stream().map(t -> {return new EmpsalarypackageEarnDedBean(
+								t.get(0, String.class).trim(),
+								t.get(1, String.class).trim(),
+								t.get(2, Character.class),
+								t.get(3, Character.class),
+								t.get(4,  BigDecimal.class).doubleValue(),
+								t.get(5, Timestamp.class).toLocalDateTime().toLocalDate().format(CommonConstraints.INSTANCE.DDMMYYYY_FORMATTER).toString(),
+								t.get(6, Timestamp.class).toLocalDateTime().toLocalDate().format(CommonConstraints.INSTANCE.DDMMYYYY_FORMATTER).toString(),
+								t.get(7, String.class).trim(),
+								t.get(8, String.class).trim(),
+								t.get(9, String.class).trim(),
+								t.get(10, String.class).trim(),
+								t.get(11, String.class).trim(),
+								t.get(12, Timestamp.class).toLocalDateTime(),
+								t.get(13, String.class).trim(),
+								t.get(14, Character.class),
+								t.get(15, Character.class)
+								);
+						}
+								).collect(Collectors.toList());
+				logger.info("empsalarypackage_Kalpana :: {}", empsalarypackageEarnDedBeanList);
+				employeeSalDetailsResponseBean.setEmpsalarypackageResponseBean(empsalarypackageEarnDedBeanList);
+			}
+
+			//get salarypackage details for deductions
+			List<Tuple> empsalarypackagededlist = empsalarypackageRepository.findByCurrentDedPackage(empcode);
+			if(empsalarypackagededlist.size()>0) {
+				List<EmpsalarypackageEarnDedBean> empsalarypackageEarnDedBeanList = 
+						empsalarypackagededlist.stream().map(t -> {return new EmpsalarypackageEarnDedBean(
+								t.get(0, String.class).trim(),
+								t.get(1, String.class).trim(),
+								t.get(2, Character.class),
+								t.get(3, Character.class),
+								t.get(4,  BigDecimal.class).doubleValue(),
+								t.get(5, Timestamp.class).toLocalDateTime().toLocalDate().format(CommonConstraints.INSTANCE.DDMMYYYY_FORMATTER).toString(),
+								t.get(6, Timestamp.class).toLocalDateTime().toLocalDate().format(CommonConstraints.INSTANCE.DDMMYYYY_FORMATTER).toString(),
+								t.get(7, String.class).trim(),
+								t.get(8, String.class).trim(),
+								t.get(9, String.class).trim(),
+								t.get(10, String.class).trim(),
+								t.get(11, String.class).trim(),
+								t.get(12, Timestamp.class).toLocalDateTime(),
+								t.get(13, String.class).trim(),
+								t.get(14, Character.class),
+								t.get(15, Character.class)
+								);
+						}
+								).collect(Collectors.toList());
+				logger.info("empsalarypackage_Kalpana :: {}", empsalarypackageEarnDedBeanList);
+				employeeSalDetailsResponseBean.setEmpsalarypackagededResponseBean(empsalarypackageEarnDedBeanList);
+			}
+		}
+
+		if(Objects.nonNull(employeeSalDetailsResponseBean)) {
+			return ResponseEntity.ok(ServiceResponseBean.builder().status(Boolean.TRUE).data(employeeSalDetailsResponseBean).build());	
+		}
+		return ResponseEntity.ok(ServiceResponseBean.builder().status(Boolean.FALSE).message("No Salary Package found for your Employee Code").build());
+
+	}
+
+
+	public ResponseEntity<?> fetchCompanySalPackage(String coycode,String closeDate){
+		List<Tuple> coysalarypackagelist = employeeDetailsEntryEditRepository.fetchCompanySalPackage(coycode,CommonConstraints.INSTANCE.closeDate);
+		if (coysalarypackagelist.size()>0) {
+			List<CoysalarypackageBean> coysalarypackageBean =
+					coysalarypackagelist.stream().map(t -> {return new CoysalarypackageBean(
+							t.get(0, String.class).trim(),
+							t.get(1, String.class).trim(),
+							t.get(2, Character.class),
+							t.get(3, Character.class)
+							);
+					}
+							).collect(Collectors.toList());
+			return ResponseEntity.ok(ServiceResponseBean.builder().status(Boolean.TRUE).data(coysalarypackageBean).build());
+		}
+		return ResponseEntity.ok(ServiceResponseBean.builder().status(Boolean.FALSE).message("No Salary Package found for your Company").build());
+	}
+	
+	public ResponseEntity<?> fetchCompanySalDedPackage(String coycode,String closeDate){
+		List<Tuple> coysalarypackagelist = employeeDetailsEntryEditRepository.fetchCompanySalDedPackage(coycode,CommonConstraints.INSTANCE.closeDate);
+		if (coysalarypackagelist.size()>0) {
+			List<CoysalarypackageBean> coysalarypackageBean =
+					coysalarypackagelist.stream().map(t -> {return new CoysalarypackageBean(
+							t.get(0, String.class).trim(),
+							t.get(1, String.class).trim(),
+							t.get(2, Character.class),
+							t.get(3, Character.class)
+							);
+					}
+							).collect(Collectors.toList());
+			return ResponseEntity.ok(ServiceResponseBean.builder().status(Boolean.TRUE).data(coysalarypackageBean).build());
+		}
+		return ResponseEntity.ok(ServiceResponseBean.builder().status(Boolean.FALSE).message("No Salary Deduction Package found for your Company").build());
+	}
 }

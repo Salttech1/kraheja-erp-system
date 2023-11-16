@@ -1,5 +1,6 @@
 package kraheja.commons.repository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import kraheja.commons.entity.Company;
 import kraheja.commons.entity.CompanyCK;
+import kraheja.commons.entity.Party;
 
 @Repository
 public interface CompanyRepository extends JpaRepository<Company, CompanyCK>{
@@ -24,4 +26,7 @@ public interface CompanyRepository extends JpaRepository<Company, CompanyCK>{
 	String findProprietorByCompanyCK_CoyCodeAndCompanyCK_CoyClosedate(String companyCode, Date closeDate);
 	
 	List<Company> findByCompanyCK_CoyClosedate(Date closeDate);
+	
+	@Query("Select e FROM Company e WHERE trim(e.companyCK.coyCode) = :companyCode  AND e.coyOpendate<= :billDate AND (e.companyCK.coyClosedate >= :billDate or e.companyCK.coyClosedate is null) ")
+	Company findByCompanyCK_CoyCodeAndBillDate(String companyCode, Date billDate);
 }

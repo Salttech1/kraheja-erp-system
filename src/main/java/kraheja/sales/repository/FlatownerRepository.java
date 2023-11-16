@@ -1,19 +1,14 @@
 package kraheja.sales.repository;
 
-import java.util.List;
-
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
-import kraheja.fd.deposit.entity.Form15hg;
 import kraheja.sales.entity.Flatowner;
 import kraheja.sales.entity.FlatownerCK;
-import kraheja.sales.entity.Outrate;
 
 @Repository
-public interface FlatownerRepository extends JpaRepository<Flatowner, FlatownerCK>, CrudRepository<Flatowner, FlatownerCK>{
+public interface FlatownerRepository extends JpaRepository<Flatowner, FlatownerCK>{
 
 	
 //	@Query("select e  from Depositor e WHERE trim(e.depositorCK.deptrDepositor) = :depositorId AND trim(e.depositorCK.deptrCoy) = :deptrCoy")
@@ -56,4 +51,7 @@ public interface FlatownerRepository extends JpaRepository<Flatowner, FlatownerC
 ;
 
 //	public Flatowner findRatesByOwnerID(String ownerid);				// 24.05.23	RS
-}
+
+	@Query("select f.fownBillmode from Flatowner f where f.flatownerCK.fownOwnertype = '0' and f.flatownerCK.fownOwnerid= :ownerId")
+   String getBillMode(String ownerId);
+ }

@@ -29,7 +29,8 @@ public interface ReportParametersRepository extends JpaRepository<Paymast, Payma
 			+ "(SELECT min(pmst_mastcode) FROM 	 PAYMAST WHERE  PMST_MASTTYPE = '9') as fromLocation,\r\n"
 			+ "(SELECT max(pmst_mastcode) FROM 	 PAYMAST WHERE  PMST_MASTTYPE = '9') as toLocation,\r\n"
 			+ "(SELECT min(pmst_mastcode) FROM 	 PAYMAST WHERE  PMST_MASTTYPE = 'A') as fromWorksite,\r\n"
-			+ "(SELECT max(pmst_mastcode) FROM 	 PAYMAST WHERE  PMST_MASTTYPE = 'A') as toWorksite\r\n"
+			+ "(SELECT max(pmst_mastcode) FROM 	 PAYMAST WHERE  PMST_MASTTYPE = 'A') as toWorksite,\r\n"
+			+ "(select trim(ent_char1) from entity where ent_class = 'PAYRL' and ent_id = 'HOTEL') as hotelYN \r\n"
 			+ "from dual", nativeQuery = true)
 	Tuple GetReportParameters();
 	
@@ -40,4 +41,9 @@ public interface ReportParametersRepository extends JpaRepository<Paymast, Payma
 			+ "and 		trim(ejin_empcode) = :empCode" , nativeQuery = true)
 	String GetGratuityMonthForEmployee(String empCode);
 
+	
+	@Query(value = "select trim(ent_char1) as hotelYN from entity where ent_class = 'PAYRL' and ent_id = 'HOTEL' ", nativeQuery = true) 
+	String GetHotelPropYN();
+
+	
 }

@@ -256,10 +256,13 @@ public class BillServiceImpl implements BillService {
 			if(Objects.nonNull(building.getBldgBldgtype()) && (building.getBldgBldgtype().equals("H") || building.getBldgBldgtype().equals("M"))) {
 				Integer matcertlnhdrCount = this.matcertlnhdrRepository.findMatcertlnhdrCountByProjCode(pbillhRequestBean.getBldgcode().trim());   
 				LOGGER.info(" matcertlnhdrCount :{} ", matcertlnhdrCount);
+				
 				Query getVendormatcertamtdtlsCountQuery = entityManager.createNativeQuery("SELECT count(*) FROM v_lnvendormatcertamtdtls  WHERE mclh_projcode = '".concat(pbillhRequestBean.getBldgcode().trim()).concat("' AND mclw_matcerttype = '").concat("Material").concat("' AND mclw_matcertcode = '").concat(pbillhRequestBean.getPbilldRequestBean().getMatgroup().trim()).concat("'"));
 				LOGGER.info("getVendormatcertamtdtlsCountQuery :{} ", getVendormatcertamtdtlsCountQuery.getSingleResult());
+				
 				Integer matcertAmtdlsCount = ((Number) getVendormatcertamtdtlsCountQuery.getSingleResult()).intValue();
 				LOGGER.info(" matcertAmtdlsCount :{} ", matcertAmtdlsCount);
+				
 				if(matcertlnhdrCount > 0 && matcertAmtdlsCount >0) {
 					Query checkLogicNoteExistsQuery = entityManager.createNativeQuery("SELECT mclh_logicnotenum , finalbillcloseyn FROM v_lnvendormatcertamtdtls WHERE mclh_projcode = '".concat(pbillhRequestBean.getBldgcode().trim())
 							.concat("'  AND mclw_matcerttype = '").concat("Material").concat("' AND mclw_matcertcode = '").concat( pbillhRequestBean.getPbilldRequestBean().getMatgroup().trim()).concat("' AND mcvh_partytype = '").concat("S").concat("' AND mcvh_partycode = '").concat(pbillhRequestBean.getPartycode().trim()).concat("'"));				   
@@ -1036,6 +1039,28 @@ public class BillServiceImpl implements BillService {
 			if(StringUtils.isBlank(suppbilldt))
 				suppbilldt = "01/01/1980";
 			Integer tdsPerc = this.entityRepository.findEntNum1ByEntityCk_EntClassAndEntityCk_EntChar1BetweenEntityDates("TDSPA", partycode, LocalDate.parse(suppbilldt, CommonConstraints.INSTANCE.DDMMYYYY_FORMATTER));
+//            'start of aadhar pan link tds rule vicky 27/10/2023 old system
+//            If TxtBILLTYPE.SelectedIndex = 0 Or TxtBILLTYPE.SelectedIndex = 3 Then
+//                Dim strPanAadharLinkedYN As String
+//                strPanAadharLinkedYN = Cls_Common_Functions.ClsGetDescription.FuncGetDescription( _
+//                    "SELECT par_aadharpanlinkedyn FROM party WHERE par_partycode = '" & TxtPBLH_PARTYCODE.Text.Trim & "' AND par_partytype = 'S' " & _
+//                    "AND sysdate BETWEEN par_opendate AND par_closedate")
+//                If strPanAadharLinkedYN = "N" Then
+//                    DecLocTDSPerc = Cls_Common_Functions.ClsGetNumericValue.FuncGetNumericValue( _
+//                    "Select ent_num1 from entity where ent_class = 'TDSPA' AND	ent_id = 'AAPAN' AND to_date('" & strlocsuppbilldt & "','dd-mm-yyyy') between ent_date1 and ent_date2")
+//                End If
+//            End If
+//          'end of aadhar pan link tds rule vicky 27/10/2023 old system
+//          'start of aadhar pan link tds rule vicky 27/10/2023 new system
+			if(billtype.equals(BillTypeEnum.TRANSPORT.getValue()) || billtype.equals(BillTypeEnum.LABOUR.getValue())) {
+				Party partyEntity1 = this.partyRepository.findByPartyCk_ParPartycodeAndPartyCk_ParClosedateAndPartyCk_ParPartytype(partycode, CommonUtils.INSTANCE.closeDateInLocalDateTime(), PartyType.S.toString());
+				if(partyEntity1.getParAadharPanLinkedYN().trim().equals("N")) {
+					String tdsrate = this.entityRepository.findByEntityCk_EntClassAndEntityCk_EntIdBetweenEntityDates("TDSPA", "AAPAN", LocalDate.parse(suppbilldt, CommonConstraints.INSTANCE.DDMMYYYY_FORMATTER)).split(CommonConstraints.INSTANCE.COMMA_STRING)[0];
+					tdsPercentage = StringUtils.isNotBlank(tdsrate) ? Double.valueOf(tdsrate) : BigInteger.ZERO.doubleValue();
+				}
+			}
+//          'end of aadhar pan link tds rule vicky 27/10/2023 new system
+			
 			if(tdsPerc != null)
 				tdsPercentage = tdsPerc.doubleValue();
 			tdsAmount = (int) Math.round((amount * tdsPercentage) / 100);

@@ -122,6 +122,12 @@ public enum CommonConstraints {
 	
 	public final Integer SEVEN = 7;
 	
+	public final Integer EIGHT = 8;
+	
+	public final Integer NINE = 9;
+	
+	public final Integer TEN = 10;
+	
 	public final String CHEQUE = "Q";
 	
 	public final String ORIGSYS = "FD";

@@ -29,4 +29,5 @@ public class ReportParametersRequestBean {
 	private String  toLocation;
 	private String  fromWorksite;
 	private String  toWorksite;
+	private String  hotelYN;
 }

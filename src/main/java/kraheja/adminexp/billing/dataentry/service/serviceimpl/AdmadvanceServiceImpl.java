@@ -10,6 +10,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -98,7 +99,7 @@ public  class AdmadvanceServiceImpl implements AdmadvanceService {
 
 	@Override
 	public ResponseEntity<?> addAdmadvance(AdmadvanceRequestBean admadvanceRequestBean) throws ParseException {
-	String ser = GenericCounterIncrementLogicUtil.generateTranNoWithSite("#NSER","#AA", GenericAuditContextHolder.getContext().getSite());
+	String ser = GenericCounterIncrementLogicUtil.generateTranNoWithSite("#NSER","#AAB", GenericAuditContextHolder.getContext().getSite());
 	logger.info("Admadvance :: {}", ser);
 		
 //		if(Objects.nonNull(admadvanceRequestBean)) {
