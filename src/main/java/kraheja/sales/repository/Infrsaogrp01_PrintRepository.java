@@ -1,5 +1,7 @@
 package kraheja.sales.repository;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -39,4 +41,10 @@ public interface Infrsaogrp01_PrintRepository extends JpaRepository<Infrsaogrp01
 	
 	@Query("select p from Infrsaogrp01_Print p where p.infrsaogrp01_printCK.saogrpSessid= :sessId and trim(p.saogrpOwnerid)= :ownerId ")
 	Infrsaogrp01_Print findByInfrsaogrp01_printCKSaogrpSessidAndSaogrpOwnerid(double sessId, String ownerId);
+
+	@Query(value="delete from infrsaogrp01_print where saogrp_sessid=? and saogrp_ownerid = ?", nativeQuery = true)
+	void deleteInfrsaogrp01_printBySessionIdAndOwnerId(double session, String ownerId);
+
+	@Query(value = "select saogrp_sessid from INFRSAOGRP01_PRINT where trim(saogrp_billnum) = ? and trim(saogrp_billmonth) = ? and trim(saogrp_ownerid) = ?", nativeQuery = true)
+	List<String> findSessionIdByBillNumAndMonthAndOwnerId(String billnum, String billMonth, String ownerId);
 }

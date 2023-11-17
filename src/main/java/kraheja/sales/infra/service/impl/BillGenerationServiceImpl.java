@@ -12,6 +12,7 @@ import java.util.Objects;
 
 import javax.persistence.Tuple;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import kraheja.arch.projbldg.dataentry.repository.BuildingRepository;
 import kraheja.commons.entity.Hsnsacmaster;
 import kraheja.commons.filter.GenericAuditContextHolder;
+import kraheja.commons.repository.CompanyRepository;
 import kraheja.commons.repository.EntityRepository;
 import kraheja.commons.repository.HsnsacmasterRepository;
 import kraheja.commons.utils.GenericCounterIncrementLogicUtil;
@@ -76,6 +78,9 @@ public class BillGenerationServiceImpl implements BillGenerationService {
 	
 	@Autowired
 	private Infrsaogrp01_PrintRepository printRepository;
+	
+	@Autowired
+	private CompanyRepository companyRepository;
 	
 	@Override
 	public BillResponse getBillDetail(InfraAuxiBillRequest billRequest) {
@@ -168,9 +173,53 @@ public class BillGenerationServiceImpl implements BillGenerationService {
 			//CHECK IF BILL ALREADY THERE
 			InfrBillDBResponse infrBillDBResponse = this.infrBillRepository.fetchDetail(yearMonth, flatOwnerIdTrim, billRequest.getChargeCode(), billRequest.getBillType());
 			log.debug("infrBillDBResponse obtaint : {}", infrBillDBResponse);
-
 			
+			//AS PER ATUL REQUIREMENT 
+			String bldgCompany = buildingRepository.findBldgCompanyByBldgCode(bldgCode);
+			String companyName = companyRepository.findByCompanyCKCoyCode(bldgCompany);
+			
+		
 			if (Objects.nonNull(infrBillDBResponse)) {
+				//TODO FETCH ALREADY HAVE A SESSION ID  
+				List<String> fetchSessionId = printRepository.findSessionIdByBillNumAndMonthAndOwnerId(infrBillDBResponse.getInfrBillnum(),infrBillDBResponse.getInfrMonth(), flatOwnerId.trim() );
+				if (StringUtils.isNoneEmpty(fetchSessionId.get(0))) {
+					sessionId = fetchSessionId.get(0);
+				}else {
+					Infrsaogrp01_PrintCK printCK = Infrsaogrp01_PrintCK.builder()
+							.saogrpBillnum(infrBillDBResponse.getInfrBillnum())
+							.saogrpInvoiceno(infrBillDBResponse.getInfrInvoiceNo()) 
+							.saogrpSessid(Double.parseDouble(sessionId))
+							.build(); 
+					
+					Infrsaogrp01_Print print = Infrsaogrp01_Print
+							.builder()
+							.infrsaogrp01_printCK(printCK)
+							.saogrpOwnerid(flatOwnerId)
+							.saogrpBldgcode(bldgCode)
+							.saogrpWing(wing)
+							.saogrpFlatnum(flatNum)
+							.saogrpBillmonth(yearMonth)
+							.saogrpBilldate(billRequest.getBillRecDate().toLocalDate())
+							.saogrpBillamt(infrRate)
+							.saogrpBillarrears(infrBillDBResponse.getInfrArrears())
+							.saogrpInterest(infrBillDBResponse.getInfrInterest())
+							.saogrpIntarrears(infrBillDBResponse.getInfrIntarrears())
+							.saogrpBillfrom(billRequest.getBillRecDate().toLocalDate())
+							.saogrpBillto(infrBillDBResponse.getInfrTodate())
+							.saogrpOutrate(infrRate)
+							.saogrpAdmincharges(adminRate)
+							.saogrpCgst(infrBillDBResponse.getInfrCgst())
+							.saogrpSgst(infrBillDBResponse.getInfrSgst())
+							.saogrpIgst(infrBillDBResponse.getInfrIgst())
+							.saogrpCgstperc(infrBillDBResponse.getInfrCgstperc())
+							.saogrpSgstperc(infrBillDBResponse.getInfrSgstperc())
+							.saogrpIgstperc(infrBillDBResponse.getInfrIgstperc())
+							.build();
+					
+					printRepository.save(print);
+				}
+			
+				
 				return BillResponse
 						.builder()
 						.result(Result.SUCCESS)
@@ -195,13 +244,12 @@ public class BillGenerationServiceImpl implements BillGenerationService {
 						.igstPerc(infrBillDBResponse.getInfrIgstperc())
 						.invoiceNumber(infrBillDBResponse.getInfrInvoiceNo())
 						.sessionId(sessionId)
+						.buildingCode(bldgCode)
+						.companyName(companyName)
 						.build();
 			}else {
 				String billNumber = GenericCounterIncrementLogicUtil.generateTranNoWithSite("#NSER", "INBIL", GenericAuditContextHolder.getContext().getSite());
 				log.debug("billNumber: {}", billNumber);
-				
-			
-
 				
 				infrRate = rate.get("infraRate");
 				adminRate = rate.get("adminRate");
@@ -224,7 +272,7 @@ public class BillGenerationServiceImpl implements BillGenerationService {
 				
 				Infrsaogrp01_PrintCK printCK = Infrsaogrp01_PrintCK.builder()
 						.saogrpBillnum(billNumber)
-						.saogrpInvoiceno(monthPart)
+						.saogrpInvoiceno("") ////TODO replace it with invoiceNumber
 						.saogrpSessid(Double.parseDouble(sessionId))
 						.build(); 
 				
@@ -281,6 +329,8 @@ public class BillGenerationServiceImpl implements BillGenerationService {
 						.igstPerc(gstRate.get("igstPer"))
 						.invoiceNumber("")
 						.sessionId(sessionId)
+						.buildingCode(bldgCode)
+						.companyName(companyName)
 						.build();
 			}
 		}
@@ -301,10 +351,10 @@ public class BillGenerationServiceImpl implements BillGenerationService {
 		LocalDate lastRecDate = fetchFromDate.toLocalDateTime().toLocalDate();
 		log.debug("fromDate : {}", lastRecDate);
 
-		
-		DBResponseForNewInfrBill dBResponseForNewInfrBill = infrBillRepository.fetchBillDateAndOldBalanceAndArearsAndInterestAndIntArears();
-		log.debug("date and balance and arearsandinterest and intarears obtaint : {}", dBResponseForNewInfrBill);
-		
+		// ownerId, chargeCode, month, billtype
+		List<DBResponseForNewInfrBill> dBResponseForNewInfrBill1 = infrBillRepository.fetchBillDateAndOldBalanceAndArearsAndInterestAndIntArears(flatOwnerId, billRequest.getChargeCode(),"202310", billRequest.getBillType() );
+		log.debug("date and balance and arearsandinterest and intarears obtaint : {}", dBResponseForNewInfrBill1);
+		DBResponseForNewInfrBill dBResponseForNewInfrBill = dBResponseForNewInfrBill1.get(0);
 		
 		
 		return this.calculateIntrest(bldgCode, wing, flatNum, dBResponseForNewInfrBill,billRequest.getChargeCode(), billRequest.getBillType(),  billRequest.getBillDate());

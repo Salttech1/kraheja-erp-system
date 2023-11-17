@@ -1,6 +1,7 @@
 package kraheja.sales.infra.controller;
 
 import java.text.ParseException;
+import java.time.LocalDateTime;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -178,6 +179,11 @@ public class OutinfraController {
 	@PostMapping("/bill-print")
 	ResponseEntity<BillResponse> printBill(@RequestParam String chargeCode, @RequestParam String billType, @RequestParam double sessionId, @RequestHeader String userId){
 		printBillService.printBill(chargeCode,billType,sessionId);
+		return ResponseEntity.ok(null);
+	}
+	@PostMapping("/bill-delete")
+	ResponseEntity<?> deletBill(@RequestParam String chargeCode, @RequestParam String billType, @RequestParam double sessionId, @RequestHeader String userId){
+		printBillService.deleteBill(sessionId, chargeCode);
 		return ResponseEntity.ok(null);
 		
 	}

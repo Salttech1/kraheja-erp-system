@@ -29,4 +29,7 @@ public interface CompanyRepository extends JpaRepository<Company, CompanyCK>{
 	
 	@Query("Select e FROM Company e WHERE trim(e.companyCK.coyCode) = :companyCode  AND e.coyOpendate<= :billDate AND (e.companyCK.coyClosedate >= :billDate or e.companyCK.coyClosedate is null) ")
 	Company findByCompanyCK_CoyCodeAndBillDate(String companyCode, Date billDate);
+	
+	@Query(value = "select coy_name from company where trim(coy_code)= ? ", nativeQuery = true)
+	String findByCompanyCKCoyCode(String companyCode);
 }

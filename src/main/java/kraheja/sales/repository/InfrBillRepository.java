@@ -1,6 +1,7 @@
 package kraheja.sales.repository;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -47,6 +48,7 @@ public interface InfrBillRepository extends JpaRepository<Infrbill, InfrbillCK> 
 	@Query(value = "select nvl(infr_month, '199001') from infrbill where trim(infr_ownerid)=? and trim(infr_bldgcode)=? and trim(infr_wing)=? and trim(infr_chargecode)=? and infr_billnum=? and trim(infr_billtype)=?", nativeQuery = true)
 	String getInfrMonth(String ownerId, String bldgcode, String wing, String chargecode, String billnum, String billtype);
 	
+	// ownerId, chargeCode, month, billtype
 	@Query("SELECT new kraheja.sales.bean.entitiesresponse.DBResponseForNewInfrBill(COALESCE(infr.infrBilldate,'01-01-1900') as billDate, "
 	        + "(COALESCE(infr.infrBillamt, 0) + COALESCE(infr.infrAdmincharges, 0) "
 	        + "+ COALESCE(infr.infrCgst, 0) + COALESCE(infr.infrSgst, 0) "
@@ -56,11 +58,11 @@ public interface InfrBillRepository extends JpaRepository<Infrbill, InfrbillCK> 
 	        + "COALESCE(infr.infrInterest, 0) as interest, "
 	        + "COALESCE(infr.infrIntarrears, 0) as intarrears )"
 	        + "FROM Infrbill infr "
-	        + "WHERE trim(infr.infrbillCK.infrOwnerId) = 'ORHHHF0000H' "
-	        + "AND infr.infrChargecode = 'AUXI' "
-	        + "AND infr.infrbillCK.infrMonth >= '202310' "
-	        + "AND infr.infrBilltype = 'N'")
-	DBResponseForNewInfrBill fetchBillDateAndOldBalanceAndArearsAndInterestAndIntArears();
+	        + "WHERE infr.infrbillCK.infrOwnerId = :ownerId " //'ORHHHF0000H' 
+	        + "AND infr.infrChargecode = :chargeCode " // 'AUXI'
+	        + "AND infr.infrbillCK.infrMonth >= :month " // '202310'
+	        + "AND infr.infrBilltype = :billtype") //'N'   
+	List<DBResponseForNewInfrBill> fetchBillDateAndOldBalanceAndArearsAndInterestAndIntArears(String ownerId,String chargeCode, String month,String billtype);
 	
 	@Query(value = "select infr_fromdate from infrbill where infr_ownerid='ORHHHF0000H' and infr_bldgcode='ORHH' and infr_wing='H' and infr_chargecode = 'AUXI' and infr_billnum='IN045650' and infr_billtype= 'N'", nativeQuery = true)
 	Timestamp fetchFromDate();

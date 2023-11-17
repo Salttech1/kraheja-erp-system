@@ -41,4 +41,6 @@ public class BillResponse extends GenericResponse{
 	private String invoiceNumber;
 	private String irnno;
 	private String sessionId;
+	private String buildingCode;
+	private String companyName;
 }
