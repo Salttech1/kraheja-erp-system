@@ -20,9 +20,9 @@ import kraheja.sales.bean.request.AuxilaryRequest;
 import kraheja.sales.bean.response.AuxilaryResponse;
 import kraheja.sales.bean.response.GridResponse;
 import kraheja.sales.infra.service.AuxilaryService;
-import kraheja.sales.infra.utilities.DateUtill;
 import kraheja.sales.repository.OutinfraRepository;
 import kraheja.sales.repository.OutrateRepository;
+import kraheja.utility.DateUtill;
 
 @Service
 public class AuxilaryServiceImpl implements AuxilaryService {
@@ -40,14 +40,18 @@ public class AuxilaryServiceImpl implements AuxilaryService {
 		String strStartDate = "";
 		String flatNumber = request.getFlatNum().trim();
 		String ownerId = "";
+		if (!request.getWing().equals(" ")) {
+			String wing = request.getWing().trim();
+			request.setWing(wing);
+		}
+		
 		try {
 			/**
 			 * check here the type of service and type of bill set from here the query.
 			 */
 			double receiptAmt = Double.parseDouble(request.getTotalAmt());
 			ownerId = request.getBuildingCode() + request.getWing() + flatNumber;
-			if (request.getWing().equals("") || request.getWing().equals(" ")) {
-				request.setWing(" ");
+			if (request.getWing().equals(" ")) {
 				ownerId = request.getBuildingCode() + " " + flatNumber;
 			}else {
 				request.setWing(request.getWing().trim());
@@ -149,11 +153,11 @@ public class AuxilaryServiceImpl implements AuxilaryService {
 		try {
 			if (wing.equals(" ")) {
 				if (request.getChargeCode().equals("INAP")) {
-					adminRate = outrateRepository.findAdminRateForEmptyWing(buildingCode, flatNum, billType);
-					maintRate = outrateRepository.findAuxiRateForEmptyWing(buildingCode, flatNum, billType);
+					adminRate = outrateRepository.findAdminRateForEmptyWing(buildingCode, flatNum, billType, date);
+					maintRate = outrateRepository.findAuxiRateForEmptyWing(buildingCode, flatNum, billType, date);
 				} else {
-					adminRate = outrateRepository.findAdminRateForEmptyWing(buildingCode, flatNum, billType);
-					maintRate = outrateRepository.findAuxiRateForEmptyWing(buildingCode, flatNum, billType);
+					adminRate = outrateRepository.findAdminRateForEmptyWing(buildingCode, flatNum, billType, date);
+					maintRate = outrateRepository.findAuxiRateForEmptyWing(buildingCode, flatNum, billType, date);
 				}
 				tdsRate = outrateRepository.findTdsRateForEmptyWingMonthWise(buildingCode, flatNum, billType, date);
 			}else {

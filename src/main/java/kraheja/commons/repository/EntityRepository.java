@@ -101,4 +101,10 @@ public interface EntityRepository extends JpaRepository<DbEntity, EntityCK>{
 	
 	@Query(value ="select nvl(ent_num1, 0) from entity where ent_class = '#OGIN' and ent_id = '#OGIN' and ent_char1='Q'", nativeQuery = true)
 	double fetchIntereRate();
+	
+	@Query(value = "select ent_char1,ent_char2,ent_char3,ent_char4,ent_num1,ent_num2 from entity where trim(ent_class)='INCBE' and trim(ent_id)<>'00000' and trim(ent_id)= ? AND ENT_DATE2='01/JAN/2050' order by ent_num4", nativeQuery = true)
+	List<Tuple> fetchCompanyEntity(String companyCode);
+	
+	@Query(value = "select ent_name,ent_char1 from entity where ent_class='INVIC' and ent_id<>'00000'", nativeQuery = true)
+	List<Tuple> fetchEntityAcMejor();
 }

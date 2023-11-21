@@ -4,7 +4,7 @@ spring:
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
     driver-class-name: ${driver_class_name:oracle.jdbc.OracleDriver}
-    url: ${database_url:jdbc:oracle:thin:@devsrv:1521:mumbaidb}
+    url: ${database_url:jdbc:oracle:thin:@neosrv:1521:mumbaidb}
     username: ${database_username:fa}
     password: ${database_password:mumbaidb}
     name: ${database_name:mumbaidb}
@@ -22,5 +22,5 @@ feign.client:
   url: ${feign-url:http://localhost:8081}
  
 ---
-report-jobs-path: ${REPORT_JOBS_PATH:////DEVSRV//temp-report//}
+report-jobs-path: ${REPORT_JOBS_PATH:////neosrv//temp-report//}
   

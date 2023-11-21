@@ -162,20 +162,19 @@ public class OutinfraController {
 		
 		BillResponse response = billGenerationService.getBillDetail(billRequest);
 		log.debug("post/response/getBill : {}",response);
-		
 		return ResponseEntity.ok(response);
 		
 	}
-	@PostMapping("/infra-auxi-create-new-bill")
-	ResponseEntity<BillResponse> getCreateBill(@Valid @RequestBody InfraAuxiBillRequest billRequest){
-		log.debug("post/request/outinfra/getbill InfraAuxiBillRequest: {} ", billRequest);
-		
-		BillResponse response = billGenerationService.getBillDetail(billRequest);
-		log.debug("post/response/getBill : {}",response);
-		
-		return ResponseEntity.ok(response);
-		
-	}
+	
+//	@PostMapping("/infra-auxi-create-new-bill")
+//	ResponseEntity<BillResponse> getCreateBill(@Valid @RequestBody InfraAuxiBillRequest billRequest){
+//		log.debug("post/request/outinfra/getbill InfraAuxiBillRequest: {} ", billRequest);
+//		
+//		BillResponse response = billGenerationService.getBillDetail(billRequest);
+//		log.debug("post/response/getBill : {}",response);
+//		return ResponseEntity.ok(response);
+//	}
+	
 	@PostMapping("/bill-print")
 	ResponseEntity<BillResponse> printBill(@RequestParam String chargeCode, @RequestParam String billType, @RequestParam double sessionId, @RequestHeader String userId){
 		printBillService.printBill(chargeCode,billType,sessionId);

@@ -12,6 +12,7 @@ public class ApiResponseMessage {
 
 	private ApiResponseMessage() {}
 
+	public static final String SUCCESS = "success";
 	public static final String AUTHORIZATION_FAILED = "message authentication failed.";
 	public static final String INVALID_HEADER_FIELDS = "invalid request header fields.";
 	public static final String BAD_REQUEST = "bad request, check request fields and re-try.";

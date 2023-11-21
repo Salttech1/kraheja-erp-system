@@ -56,11 +56,11 @@ public interface OutrateRepository extends JpaRepository<Outrate, OutrateCK> {
 	@Query(value = "select nvl(outr_auxiadmin, 0) from outrate where trim(outr_bldgcode)=? and trim(outr_wing)=? and trim(outr_flatnum)=? and outr_billtype=? and ? between outr_startdate and outr_enddate", nativeQuery = true)
 	double findAdminRateMonthWiseForAuxi(String bldgcode, String wing, String flatno, String billtype, String startDate);
 	
-	@Query(value = "select nvl(outr_auxiadmin, 0) from outrate where outr_bldgcode=? and outr_wing=' ' and trim(outr_flatnum)=? and outr_billtype=? ", nativeQuery = true)
-	double findAdminRateForEmptyWing(String bldgCode, String flatNumber, String billType);
+	@Query(value = "select nvl(outr_auxiadmin, 0) from outrate where outr_bldgcode=? and outr_wing=' ' and trim(outr_flatnum)=? and outr_billtype=? and ? between outr_startdate and outr_enddate ", nativeQuery = true)
+	double findAdminRateForEmptyWing(String bldgCode, String flatNumber, String billType, String startDate);
 	
-	@Query(value = "select nvl(outr_auxirate, 0) from outrate where outr_bldgcode=? and outr_wing=' ' and trim(outr_flatnum)=? and outr_billtype=? ", nativeQuery = true)
-	double findAuxiRateForEmptyWing(String bldgCode, String flatNumber, String billType);
+	@Query(value = "select nvl(outr_auxirate, 0) from outrate where outr_bldgcode=? and outr_wing=' ' and trim(outr_flatnum)=? and outr_billtype=? and ? between outr_startdate and outr_enddate ", nativeQuery = true)
+	double findAuxiRateForEmptyWing(String bldgCode, String flatNumber, String billType, String startDate);
 //	OUTR_INFRRATE OUTRINFRRATE RATE FETCHING END BY SAZZAD
 	
 	@Query("select COALESCE(min(o.outrateCK.outrStartdate), '201707') from Outrate o where o.outrateCK.outrBldgcode=:bldgcode and o.outrateCK.outrFlatnum=:flatno and o.outrateCK.outrWing=:wing and o.outrBilltype=:billtype")

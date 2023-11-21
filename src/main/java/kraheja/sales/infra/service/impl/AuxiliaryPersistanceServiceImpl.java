@@ -44,8 +44,8 @@ import kraheja.sales.bean.response.InchequeResponse;
 import kraheja.sales.entity.Outinfra;
 import kraheja.sales.entity.OutinfraCK;
 import kraheja.sales.infra.service.AuxiliaryPersistanceService;
-import kraheja.sales.infra.utilities.DateUtill;
 import kraheja.sales.repository.OutinfraRepository;
+import kraheja.utility.DateUtill;
 import lombok.extern.log4j.Log4j2;
 
 /**
@@ -102,9 +102,6 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 			flatNumber = flatNumber + " ";
 		}
 
-		if (wing.equals("")) {
-			wing = " ";
-		}
 		partyCode = bldgCode + wing + flatNumber + "%";
 
 		lastOwnerid = partyRepository.getPartyCode(partyCode, "F");
@@ -129,10 +126,11 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 	}
 
 	@Override
-	public InchequeResponse saveIncheqe(String bldgCode, String wing, String flatNumber, String chargeCode, String billType,
+	public InchequeResponse saveIncheqe(String bldgCode, String reqWing, String flatNumber, String chargeCode, String billType,
 			InchequeRequest inchequeRequest) {
 		log.debug("inchequeRequest: {}", inchequeRequest);
 
+		String wing = "";
 		String remarks = "";
 		String result = Result.FAILED;
 		String message = ApiResponseMessage.INCHEQ_DETAIL_FAILED_TO_SAVE;
@@ -141,7 +139,18 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 		String chequeNo = "";
 		String siteName = GenericAuditContextHolder.getContext().getSite();
 		String userId = GenericAuditContextHolder.getContext().getUserid();
-
+		
+		if (!flatNumber.equals(" "))
+			
+		if (!reqWing.equals(" ")) {
+			 wing = reqWing.trim();
+			ownerId = bldgCode + wing + flatNumber;
+		}
+		else if (reqWing.equals(" ")) {
+			wing = " ";
+			ownerId = bldgCode + " " + flatNumber;
+		}
+		
 		String receiptNumber = GenericCounterIncrementLogicUtil.generateTranNoWithSite("#NSER", "#REC", siteName);
 		log.debug("receiptNumber: {}", receiptNumber);
 		
@@ -180,12 +189,7 @@ public class AuxiliaryPersistanceServiceImpl implements AuxiliaryPersistanceServ
 		List<GridResponse> gridRequest = inchequeRequest.getGridRequest();
 		List<InchequeDetailResponse> chequeResponse = new ArrayList<>();
 
-		if (wing.equals("")) {
-			ownerId = bldgCode + " " + flatNumber;
-			wing = " ";
-		} else {
-			ownerId = bldgCode + wing + flatNumber;
-		}
+		
 		log.debug("ownerId : {}", ownerId);
 
 		try {
