@@ -1,9 +1,7 @@
 package kraheja.constant;
 
-import kraheja.exception.InternalServerError;
-
 /**
- * <p>Application response constant.</p>
+ * <p>application response constant.</p>
  * 
  * @author sazzad.alom
  * @since 1.0.0
@@ -13,6 +11,7 @@ public class ApiResponseMessage {
 	private ApiResponseMessage() {}
 
 	public static final String SUCCESS = "success";
+	public static final String DATA_FETCH_SUCCESSFULLY = "details fetch successfully."; 
 	public static final String AUTHORIZATION_FAILED = "message authentication failed.";
 	public static final String INVALID_HEADER_FIELDS = "invalid request header fields.";
 	public static final String BAD_REQUEST = "bad request, check request fields and re-try.";

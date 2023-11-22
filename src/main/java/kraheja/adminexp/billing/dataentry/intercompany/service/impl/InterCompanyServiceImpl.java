@@ -4,11 +4,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -28,9 +26,17 @@ import kraheja.commons.repository.EntityRepository;
 import kraheja.constant.ApiResponseCode;
 import kraheja.constant.ApiResponseMessage;
 import kraheja.constant.Result;
-import kraheja.payload.GenericResponse;
 import kraheja.utility.DateUtill;
 import lombok.extern.log4j.Log4j2;
+/**
+ * <p>
+ * this @service created for fetch inter company data calculate it condition wise.
+ * </p>
+ * 
+ * @author sazzad.alom
+ * @version 1.0.0
+ * @since 21-NOV-2023
+ */
 
 @Log4j2
 @Service
@@ -47,12 +53,10 @@ public class InterCompanyServiceImpl implements InterCompanyService {
 	@Override
 	public AddInterCompanyResponse addInterCompany(InterCompanyRequest request) {
 		List<AddInterCompanyData> interCompanyDataList = new ArrayList<>();
-		List<Map<String, Double>> flexibleMapList = new ArrayList<>();
 		String companyCode = request.getCompanyCode();
 		String projectCode = request.getProjectCode();
 		LocalDate billDate = null , billFrom = null , billTo = null ;
 		
-		TraiBalance traiBalance = TraiBalance.builder().build();
 		List<TraiBalance> traiBalanceList = new ArrayList<>();
 		try {
 			LocalDateTime maxPeriod = billheaderRepository.fetchMaxPeriod(companyCode, projectCode);
@@ -99,15 +103,12 @@ public class InterCompanyServiceImpl implements InterCompanyService {
 			log.debug("traiBalanceList : {} totalRecord: {}", traiBalanceList, traiBalanceList.size());
 			List<Tuple> companyEntityList = entityRepository.fetchCompanyEntity(companyCode);
 			log.debug("companyEntityList obtaint: {} object count: {}", companyEntityList, companyEntityList.size());
-			String locCompanyAmtName = "";
-			String traiBalanceAcMejor = "";
-			String acMejor = "";
-				
+			
 				
 				for (Tuple traiBalanceTuple : fetchTraiBalance) {
 					AddInterCompanyData addInterCompanyData = AddInterCompanyData.builder().build();
 					addInterCompanyData.setAcmajor(traiBalanceTuple.get("ac_acmajor",String.class));
-					addInterCompanyData.setMajorName(traiBalanceTuple.get("acname",String.class));
+					addInterCompanyData.setMajorName(traiBalanceTuple.get("acname",String.class).trim());
 					addInterCompanyData.setAcminor(traiBalanceTuple.get("ac_acminor",String.class) == null ? "" : traiBalanceTuple.get("ac_acminor",String.class));
 					addInterCompanyData.setMinorName(traiBalanceTuple.get("acminorname",String.class) == null ? "" : traiBalanceTuple.get("acminorname",String.class));
 					Character character = traiBalanceTuple.get("ac_mintype",Character.class) == null ? ' ' : traiBalanceTuple.get("ac_mintype",Character.class);
@@ -124,7 +125,7 @@ public class InterCompanyServiceImpl implements InterCompanyService {
 						
 						for (Tuple companyEntityTuple : companyEntityList) {
 							
-							locCompanyAmtName =  companyEntityTuple.get("ent_char3", String.class).trim() + "-" + companyEntityTuple.get("ent_char4", String.class).trim();
+							String locCompanyAmtName =  companyEntityTuple.get("ent_char3", String.class).trim() + "-" + companyEntityTuple.get("ent_char4", String.class).trim();
 							log.debug("locCompanyAmtName : {}", locCompanyAmtName);
 							
 							companyEntityTuple.get("ent_char1", String.class);
@@ -132,7 +133,7 @@ public class InterCompanyServiceImpl implements InterCompanyService {
 							double localPercentage1 = companyEntityTuple.get("ent_num1", BigDecimal.class).doubleValue();
 							double localPercentage2 = companyEntityTuple.get("ent_num2", BigDecimal.class).doubleValue();
 						
-							acMejor = entAcMejor.get("ent_char1", String.class);
+							String acMejor = entAcMejor.get("ent_char1", String.class);
 							String traiBalanceMejor = traiBalanceTuple.get("ac_acmajor",String.class);
 							log.debug("acMejor: {} traiBalanceAcmajor: {}", acMejor, traiBalanceMejor);
 
@@ -145,22 +146,19 @@ public class InterCompanyServiceImpl implements InterCompanyService {
 							flexibleMap.put(locCompanyAmtName, amount);
 						}
 					}
-					flexibleMapList.add(flexibleMap);
-					addInterCompanyData.setLocalCompanyData(flexibleMapList);
+					addInterCompanyData.setLocalCompanyData(flexibleMap);
 					interCompanyDataList.add(addInterCompanyData);
 				}
 
 			
 		} catch (Exception e) {
-			// TODO: handle exception
+			throw new InternalError("error occured due to internal issue");
 		}
-		
-		
 		
 		return AddInterCompanyResponse.builder()
 				.result(Result.SUCCESS)
 				.responseCode(ApiResponseCode.SUCCESS)
-				.message(ApiResponseMessage.SUCCESS)
+				.message(ApiResponseMessage.DATA_FETCH_SUCCESSFULLY)
 				.interCompanyData(interCompanyDataList)
 				.build();
 	}

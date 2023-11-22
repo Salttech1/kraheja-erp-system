@@ -1,6 +1,5 @@
 package kraheja.adminexp.billing.dataentry.intercompany.bean.response;
 
-import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -26,5 +25,5 @@ public class AddInterCompanyData {
 	private String minorName;
 	private String acMinType;
 	private Double acAmount;
-	private List<Map<String, Double>> localCompanyData;
+	private Map<String, Double> localCompanyData;
 }
